@@ -124,6 +124,12 @@ function renderProducts(filter = "all") {
   const list = filter === "all" ? PRODUCTS : PRODUCTS.filter((p) => p.category === filter);
 
   list.forEach((p, i) => {
+    const waText = encodeURIComponent(
+      `Hello Meso Households! \n\n` +
+        `I'd like to order:\n• ${p.name} — ${formatKES(p.price)}\n\n` +
+        `Please confirm availability and delivery details.\n\n` +
+        `Thank you!`
+    );
     const card = document.createElement("article");
     card.className = "product-card";
     card.style.animationDelay = i * 0.06 + "s";
@@ -143,6 +149,10 @@ function renderProducts(filter = "all") {
             Add
           </button>
         </div>
+        <a class="wa-order-btn" href="https://wa.me/${WHATSAPP_NUMBER}?text=${waText}" target="_blank" rel="noopener" aria-label="Order ${p.name} on WhatsApp">
+          <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.39-1.47-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.44-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.62-.92-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.49 0 1.47 1.07 2.89 1.22 3.09.15.2 2.11 3.22 5.11 4.51.71.31 1.27.49 1.7.63.72.23 1.37.2 1.88.12.57-.09 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35zm-5.45 7.23a8.3 8.3 0 0 1-4.23-1.16l-.3-.18-3.14.82.84-3.06-.2-.31a8.3 8.3 0 0 1-1.28-4.44c0-4.6 3.75-8.35 8.37-8.35a8.3 8.3 0 0 1 8.35 8.37c0 4.6-3.76 8.34-8.41 8.34zm8.42-18.37C18.85 1.75 17.06 1 15.1 1h-.07A11.11 11.11 0 0 0 3.94 12.14c0 1.96.51 3.87 1.49 5.56L3.85 23l5.44-1.42a11.05 11.05 0 0 0 5.3 1.35h.01c6.15 0 11.15-5 11.16-11.14 0-2.97-1.16-5.77-3.27-7.87z"/></svg>
+          Order on WhatsApp
+        </a>
       </div>`;
     productsGrid.appendChild(card);
   });
@@ -303,6 +313,45 @@ $("#checkoutBtn").addEventListener("click", () => {
   );
 });
 
+/* ---------- Hero slideshow ---------- */
+const heroSlides = $$(".hero-slide");
+const sliderDots = $("#sliderDots");
+let slideIdx = 0;
+let slideTimer = null;
+
+if (heroSlides.length > 1 && sliderDots) {
+  heroSlides.forEach((_, i) => {
+    const dot = document.createElement("button");
+    dot.className = "slider-dot" + (i === 0 ? " active" : "");
+    dot.setAttribute("aria-label", `Show photo ${i + 1}`);
+    dot.addEventListener("click", () => goToSlide(i, true));
+    sliderDots.appendChild(dot);
+  });
+
+  const dots = $$(".slider-dot", sliderDots);
+
+  function goToSlide(i, manual = false) {
+    slideIdx = (i + heroSlides.length) % heroSlides.length;
+    heroSlides.forEach((s, idx) => s.classList.toggle("active", idx === slideIdx));
+    dots.forEach((d, idx) => d.classList.toggle("active", idx === slideIdx));
+    if (manual) restartTimer();
+  }
+
+  function restartTimer() {
+    clearInterval(slideTimer);
+    slideTimer = setInterval(() => goToSlide(slideIdx + 1), 4500);
+  }
+
+  $("#slidePrev").addEventListener("click", () => goToSlide(slideIdx - 1, true));
+  $("#slideNext").addEventListener("click", () => goToSlide(slideIdx + 1, true));
+
+  const slideshowBox = $("#heroSlideshow");
+  slideshowBox.addEventListener("mouseenter", () => clearInterval(slideTimer));
+  slideshowBox.addEventListener("mouseleave", restartTimer);
+
+  restartTimer();
+}
+
 /* ---------- Navbar ---------- */
 const navbar = $("#navbar");
 const hamburger = $("#hamburger");
@@ -327,7 +376,7 @@ window.addEventListener("scroll", () => {
 });
 
 /* ---------- Active nav link on scroll ---------- */
-const sections = ["home", "about", "products", "why", "visit"].map((id) => $("#" + id));
+const sections = ["home", "products", "about", "why", "visit"].map((id) => $("#" + id));
 function highlightNav() {
   const pos = window.scrollY + 140;
   let current = "home";

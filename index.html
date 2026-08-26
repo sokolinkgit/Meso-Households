@@ -47,8 +47,8 @@
 
       <nav class="nav-links" id="navLinks">
         <a href="#home" class="nav-link active">Home</a>
-        <a href="#about" class="nav-link">About</a>
         <a href="#products" class="nav-link">Products</a>
+        <a href="#about" class="nav-link">About</a>
         <a href="#why" class="nav-link">Why Us</a>
         <a href="#visit" class="nav-link">Visit Us</a>
         <a href="tel:+254742005725" class="btn btn-outline nav-call-btn">
@@ -123,7 +123,35 @@
           </div>
         </div>
         <div class="hero-visual">
-          <img src="images/hero.jpg" alt="Household essentials at Meso Households" />
+          <div class="hero-slideshow" id="heroSlideshow">
+            <figure class="hero-slide active">
+              <img src="images/slide-1.jpg" alt="Happy customer holding her new stainless steel vacuum flask" />
+              <figcaption class="slide-caption"><strong>Vacuum Flask</strong><span>KES 1,500 • Another happy customer</span></figcaption>
+            </figure>
+            <figure class="hero-slide">
+              <img src="images/slide-2.jpg" alt="Happy customer with his brand new blender" />
+              <figcaption class="slide-caption"><strong>Heavy-Duty Blender</strong><span>KES 4,500 • Another happy customer</span></figcaption>
+            </figure>
+            <figure class="hero-slide">
+              <img src="images/slide-3.jpg" alt="Smiling customer carrying her new dinner plates and mugs" />
+              <figcaption class="slide-caption"><strong>Plates &amp; Mugs</strong><span>KES 1,000+ • Another happy customer</span></figcaption>
+            </figure>
+            <figure class="hero-slide">
+              <img src="images/slide-4.jpg" alt="Happy couple holding their new cooking pots set" />
+              <figcaption class="slide-caption"><strong>Cooking Pots Set</strong><span>KES 5,500 • Another happy customer</span></figcaption>
+            </figure>
+            <figure class="hero-slide">
+              <img src="images/slide-5.jpg" alt="Delighted customer holding his new electric kettle" />
+              <figcaption class="slide-caption"><strong>Electric Kettle</strong><span>KES 2,200 • Another happy customer</span></figcaption>
+            </figure>
+            <button class="slide-nav slide-prev" id="slidePrev" aria-label="Previous photo">
+              <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12l4.58-4.59z"/></svg>
+            </button>
+            <button class="slide-nav slide-next" id="slideNext" aria-label="Next photo">
+              <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+            </button>
+            <div class="slider-dots" id="sliderDots"></div>
+          </div>
           <div class="hero-card hero-card-top">
             <strong>Best Prices</strong>
             <span>Wholesale &amp; retail</span>
@@ -140,21 +168,71 @@
     <section class="features">
       <div class="container features-grid">
         <div class="feature">
-          <span class="feature-icon">🏪</span>
+          <span class="feature-icon fi-shop">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m3 9 1.5-5h15L21 9"/>
+              <path d="M4.5 9.8V20h15V9.8"/>
+              <path d="M9.5 20v-6h5v6"/>
+              <path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/>
+            </svg>
+          </span>
           <div><h4>Physical Shop</h4><p>Visit us at Muthithu Building, GF02, Kamukunji</p></div>
         </div>
         <div class="feature">
-          <span class="feature-icon">💸</span>
+          <span class="feature-icon fi-price">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3.8 8.6a4 4 0 0 1 4.8-4.8 4 4 0 0 1 6.8 0 4 4 0 0 1 4.8 4.8 4 4 0 0 1 0 6.8 4 4 0 0 1-4.8 4.8 4 4 0 0 1-6.8 0 4 4 0 0 1-4.8-4.8 4 4 0 0 1 0-6.8Z"/>
+              <path d="m9 15 6-6"/>
+              <circle cx="9.5" cy="9.5" r="1.1"/>
+              <circle cx="14.5" cy="14.5" r="1.1"/>
+            </svg>
+          </span>
           <div><h4>Fair Prices</h4><p>Quality products at wholesale-friendly prices</p></div>
         </div>
         <div class="feature">
-          <span class="feature-icon">🚚</span>
-          <div><h4>Delivery Available</h4><p>We deliver across Nairobi on order</p></div>
+          <span class="feature-icon fi-deliver">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/>
+              <path d="M15 18H9"/>
+              <path d="M19 18h2a1 1 0 0 0 1-1v-3.66a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14"/>
+              <circle cx="17" cy="18" r="2"/>
+              <circle cx="7" cy="18" r="2"/>
+            </svg>
+          </span>
+          <div><h4>Delivery Available</h4><p>We deliver countrywide once you order</p></div>
         </div>
         <div class="feature">
-          <span class="feature-icon">🤝</span>
+          <span class="feature-icon fi-service">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 11h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5Z"/>
+              <path d="M21 11v5a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3Z"/>
+              <path d="M3 11a9 9 0 0 1 18 0"/>
+              <path d="M21 16v2a4 4 0 0 1-4 4h-4"/>
+            </svg>
+          </span>
           <div><h4>Friendly Service</h4><p>Honest advice to help you pick right</p></div>
         </div>
+      </div>
+    </section>
+
+    <!-- ===== Products ===== -->
+    <section class="products section" id="products">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-tag">Our Products</span>
+          <h2>Household Essentials We Stock</h2>
+          <p>Tap a category to browse — add items to your cart or order directly on WhatsApp.</p>
+        </div>
+
+        <div class="filter-bar" id="filterBar">
+          <button class="filter-btn active" data-filter="all">All Items</button>
+          <button class="filter-btn" data-filter="appliances">🍳 Kitchen Appliances</button>
+          <button class="filter-btn" data-filter="flasks">🧴 Flasks &amp; Thermos</button>
+          <button class="filter-btn" data-filter="dining">🍽️ Dining</button>
+          <button class="filter-btn" data-filter="cookware">🥘 Cookware</button>
+        </div>
+
+        <div class="products-grid" id="productsGrid"><!-- injected by JS --></div>
       </div>
     </section>
 
@@ -184,10 +262,22 @@
             service that treats you like family.
           </p>
           <ul class="about-list">
-            <li>✔ Quality brands you can trust</li>
-            <li>✔ Wholesale &amp; retail quantities</li>
-            <li>✔ Genuine product guidance</li>
-            <li>✔ Delivery across Nairobi</li>
+            <li>
+              <svg class="check-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path fill="#fff" d="M10.6 16.2 6.35 11.95l1.41-1.41 2.83 2.83 5.66-5.66 1.41 1.41z"/></svg>
+              Quality brands you can trust
+            </li>
+            <li>
+              <svg class="check-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path fill="#fff" d="M10.6 16.2 6.35 11.95l1.41-1.41 2.83 2.83 5.66-5.66 1.41 1.41z"/></svg>
+              Wholesale &amp; retail quantities
+            </li>
+            <li>
+              <svg class="check-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path fill="#fff" d="M10.6 16.2 6.35 11.95l1.41-1.41 2.83 2.83 5.66-5.66 1.41 1.41z"/></svg>
+              Genuine product guidance
+            </li>
+            <li>
+              <svg class="check-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path fill="#fff" d="M10.6 16.2 6.35 11.95l1.41-1.41 2.83 2.83 5.66-5.66 1.41 1.41z"/></svg>
+              Countrywide delivery
+            </li>
           </ul>
           <div class="about-actions">
             <a href="#products" class="btn btn-primary">Explore Our Products</a>
@@ -197,63 +287,79 @@
       </div>
     </section>
 
-    <!-- ===== Products ===== -->
-    <section class="products section" id="products">
-      <div class="container">
-        <div class="section-head">
-          <span class="section-tag">Our Products</span>
-          <h2>Household Essentials We Stock</h2>
-          <p>Tap a category to browse — add items to your cart and order directly on WhatsApp.</p>
-        </div>
-
-        <div class="filter-bar" id="filterBar">
-          <button class="filter-btn active" data-filter="all">All Items</button>
-          <button class="filter-btn" data-filter="appliances">🍳 Kitchen Appliances</button>
-          <button class="filter-btn" data-filter="flasks">🧴 Flasks &amp; Thermos</button>
-          <button class="filter-btn" data-filter="dining">🍽️ Dining</button>
-          <button class="filter-btn" data-filter="cookware">🥘 Cookware</button>
-        </div>
-
-        <div class="products-grid" id="productsGrid"><!-- injected by JS --></div>
-      </div>
-    </section>
-
     <!-- ===== Why us ===== -->
     <section class="why section" id="why">
       <div class="container">
         <div class="section-head">
           <span class="section-tag">Why Choose Us</span>
-          <h2>Why Kamukunji Shops With Us</h2>
+          <h2>Why Shop With Us</h2>
           <p>We're not just a shop — we're the reliable partner your household deserves.</p>
         </div>
         <div class="why-grid">
           <div class="why-card">
-            <span class="why-icon">🏆</span>
+            <span class="why-icon wi-gold">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="8" r="6"/>
+                <path d="M15.5 13.5 17 22l-5-3-5 3 1.5-8.5"/>
+              </svg>
+            </span>
             <h3>Quality You Can Feel</h3>
             <p>Every product we stock is hand-picked for durability and performance, so you buy once and buy right.</p>
           </div>
           <div class="why-card">
-            <span class="why-icon">💰</span>
+            <span class="why-icon wi-green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12.39 2.6A2 2 0 0 0 11 2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 .6 1.4l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42Z"/>
+                <circle cx="7.5" cy="7.5" r="1.2"/>
+              </svg>
+            </span>
             <h3>Prices That Respect You</h3>
             <p>We buy smart so you save. Wholesale-friendly prices on everything from single pieces to bulk orders.</p>
           </div>
           <div class="why-card">
-            <span class="why-icon">🛍️</span>
+            <span class="why-icon wi-blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 21.7a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.7l-7-4.1a2 2 0 0 0-2 0L4 6.3A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7Z"/>
+                <path d="M12 22V12"/>
+                <path d="m3.3 7 7.7 4.7a2 2 0 0 0 2 0L20.7 7"/>
+                <path d="m7.5 4.3 9 5.1"/>
+              </svg>
+            </span>
             <h3>Huge Variety</h3>
             <p>Flasks, thermos, plates, blenders, kettles, bottles, pots, cutlery — if your home needs it, we have it.</p>
           </div>
           <div class="why-card">
-            <span class="why-icon">📍</span>
+            <span class="why-icon wi-red">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+            </span>
             <h3>Easy to Find</h3>
             <p>Right in Kamukunji at Muthithu Building, Ground Floor Shop GF02 — a short walk from the main market.</p>
           </div>
           <div class="why-card">
-            <span class="why-icon">🚚</span>
-            <h3>We Deliver</h3>
-            <p>Can't make it to the shop? Order on WhatsApp and we'll deliver across Nairobi.</p>
+            <span class="why-icon wi-violet">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/>
+                <path d="M15 18H9"/>
+                <path d="M19 18h2a1 1 0 0 0 1-1v-3.66a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14"/>
+                <circle cx="17" cy="18" r="2"/>
+                <circle cx="7" cy="18" r="2"/>
+              </svg>
+            </span>
+            <h3>Country Wide Delivery</h3>
+            <p>Can't make it to the shop? Order on WhatsApp and we'll deliver countrywide — anywhere in Kenya.</p>
           </div>
           <div class="why-card">
-            <span class="why-icon">❤️</span>
+            <span class="why-icon wi-teal">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M8 14s1.5 2.2 4 2.2 4-2.2 4-2.2"/>
+                <path d="M9 9h.01"/>
+                <path d="M15 9h.01"/>
+              </svg>
+            </span>
             <h3>Service With a Smile</h3>
             <p>Our team listens, advises honestly and never pushes you to buy what you don't need.</p>
           </div>
@@ -378,8 +484,8 @@
         <h4>Quick Links</h4>
         <ul>
           <li><a href="#home">Home</a></li>
-          <li><a href="#about">About Us</a></li>
           <li><a href="#products">Products</a></li>
+          <li><a href="#about">About Us</a></li>
           <li><a href="#why">Why Choose Us</a></li>
           <li><a href="#visit">Visit Us</a></li>
         </ul>
