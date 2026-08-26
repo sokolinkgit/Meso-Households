@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meso Households — Your One-Stop Household Solution | Kamukunji, Nairobi</title>
+  <meta name="description" content="Meso Households is Nairobi's one-stop shop for flasks, plates, blenders, thermos, bottles, electric kettles and more. Visit us at Muthithu Building, Shop GF02, Kamukunji, Nairobi." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>" />
+</head>
+<body>
+
+  <!-- ===== Top bar ===== -->
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="topbar-left">
+        <span class="topbar-item">
+          <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg>
+          Kamukunji, Muthithu Building — Shop GF02, Nairobi
+        </span>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-item">Mon – Sat: 7:30 AM – 6:30 PM</span>
+        <a class="topbar-item topbar-phone" href="tel:+254742005725">
+          <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24c1.12.37 2.33.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C10.61 21 3 13.39 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1.02l-2.2 2.2z"/></svg>
+          0742 005 725
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Navbar ===== -->
+  <header class="navbar" id="navbar">
+    <div class="container navbar-inner">
+      <a href="#home" class="brand">
+        <span class="brand-icon">
+          <svg viewBox="0 0 24 24" width="26" height="26"><path fill="currentColor" d="M12 3 2 12h3v8h6v-6h2v6h6v-8h3L12 3z"/></svg>
+        </span>
+        <span class="brand-text">
+          <strong>Meso Households</strong>
+          <small>One-Stop Household Solution</small>
+        </span>
+      </a>
+
+      <nav class="nav-links" id="navLinks">
+        <a href="#home" class="nav-link active">Home</a>
+        <a href="#about" class="nav-link">About</a>
+        <a href="#products" class="nav-link">Products</a>
+        <a href="#why" class="nav-link">Why Us</a>
+        <a href="#visit" class="nav-link">Visit Us</a>
+        <a href="tel:+254742005725" class="btn btn-outline nav-call-btn">
+          <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24c1.12.37 2.33.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C10.61 21 3 13.39 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1.02l-2.2 2.2z"/></svg>
+          Call Us
+        </a>
+      </nav>
+
+      <div class="nav-actions">
+        <button class="cart-btn" id="cartBtn" aria-label="Open cart">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM7.16 14.9 5.12 4.02A1 1 0 0 0 4.14 3.2H2v2h1.36l2.04 10.88a1 1 0 0 0 .98.82h11.24a1 1 0 0 0 .98-.76L21 8H7.53l-.37-2h11.5l-1.72 6.9H7.16z"/></svg>
+          <span class="cart-count" id="cartCount">0</span>
+        </button>
+        <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== Cart drawer ===== -->
+  <div class="cart-overlay" id="cartOverlay"></div>
+  <aside class="cart-drawer" id="cartDrawer" aria-label="Shopping cart">
+    <div class="cart-head">
+      <h3>Your Order <span class="cart-head-count" id="cartHeadCount"></span></h3>
+      <button class="cart-close" id="cartClose" aria-label="Close cart">&times;</button>
+    </div>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-empty" id="cartEmpty">
+      <svg viewBox="0 0 24 24" width="56" height="56"><path fill="currentColor" d="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM7.16 14.9 5.12 4.02A1 1 0 0 0 4.14 3.2H2v2h1.36l2.04 10.88a1 1 0 0 0 .98.82h11.24a1 1 0 0 0 .98-.76L21 8H7.53l-.37-2h11.5l-1.72 6.9H7.16z"/></svg>
+      <p>Your cart is empty.</p>
+      <p class="cart-empty-sub">Add some household essentials to get started!</p>
+      <button class="btn btn-primary" id="cartEmptyBrowse">Browse Products</button>
+    </div>
+    <div class="cart-foot" id="cartFoot">
+      <div class="cart-total-row">
+        <span>Total</span>
+        <strong id="cartTotal">KES 0</strong>
+      </div>
+      <p class="cart-note">Order via WhatsApp — pay on delivery.</p>
+      <button class="btn btn-whatsapp btn-block" id="checkoutBtn">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.39-1.47-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.44-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.62-.92-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.49 0 1.47 1.07 2.89 1.22 3.09.15.2 2.11 3.22 5.11 4.51.71.31 1.27.49 1.7.63.72.23 1.37.2 1.88.12.57-.09 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35zm-5.45 7.23a8.3 8.3 0 0 1-4.23-1.16l-.3-.18-3.14.82.84-3.06-.2-.31a8.3 8.3 0 0 1-1.28-4.44c0-4.6 3.75-8.35 8.37-8.35a8.3 8.3 0 0 1 8.35 8.37c0 4.6-3.76 8.34-8.41 8.34zm8.42-18.37C18.85 1.75 17.06 1 15.1 1h-.07A11.11 11.11 0 0 0 3.94 12.14c0 1.96.51 3.87 1.49 5.56L3.85 23l5.44-1.42a11.05 11.05 0 0 0 5.3 1.35h.01c6.15 0 11.15-5 11.16-11.14 0-2.97-1.16-5.77-3.27-7.87z"/></svg>
+        Order on WhatsApp
+      </button>
+      <button class="btn-text" id="clearCartBtn">Clear cart</button>
+    </div>
+  </aside>
+
+  <main>
+    <!-- ===== Hero ===== -->
+    <section class="hero" id="home">
+      <div class="container hero-inner">
+        <div class="hero-content">
+          <span class="hero-badge">🏠 Kamukunji's Household Experts</span>
+          <h1>Everything Your Home Needs, <em>Under One Roof</em></h1>
+          <p>
+            From flasks and thermos to blenders, electric kettles, plates and cookware —
+            Meso Households is Nairobi's one-stop household solution with quality products
+            at prices that make sense.
+          </p>
+          <div class="hero-actions">
+            <a href="#products" class="btn btn-primary btn-lg">
+              Shop Now
+              <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+            </a>
+            <a href="#visit" class="btn btn-outline-light btn-lg">Visit the Shop</a>
+          </div>
+          <div class="hero-stats">
+            <div class="hero-stat"><strong>500+</strong><span>Products in stock</span></div>
+            <div class="hero-stat"><strong>10k+</strong><span>Happy customers</span></div>
+            <div class="hero-stat"><strong>1</strong><span>Stop for your home</span></div>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <img src="images/hero.jpg" alt="Household essentials at Meso Households" />
+          <div class="hero-card hero-card-top">
+            <strong>Best Prices</strong>
+            <span>Wholesale &amp; retail</span>
+          </div>
+          <div class="hero-card hero-card-bottom">
+            <span class="hero-card-phone">📞 0742 005 725</span>
+            <span>Call or WhatsApp to order</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Feature strip ===== -->
+    <section class="features">
+      <div class="container features-grid">
+        <div class="feature">
+          <span class="feature-icon">🏪</span>
+          <div><h4>Physical Shop</h4><p>Visit us at Muthithu Building, GF02, Kamukunji</p></div>
+        </div>
+        <div class="feature">
+          <span class="feature-icon">💸</span>
+          <div><h4>Fair Prices</h4><p>Quality products at wholesale-friendly prices</p></div>
+        </div>
+        <div class="feature">
+          <span class="feature-icon">🚚</span>
+          <div><h4>Delivery Available</h4><p>We deliver across Nairobi on order</p></div>
+        </div>
+        <div class="feature">
+          <span class="feature-icon">🤝</span>
+          <div><h4>Friendly Service</h4><p>Honest advice to help you pick right</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== About ===== -->
+    <section class="about section" id="about">
+      <div class="container about-inner">
+        <div class="about-media">
+          <img class="about-img-main" src="images/pots.jpg" alt="Quality cookware at Meso Households" />
+          <img class="about-img-float" src="images/cutlery.jpg" alt="Cutlery sets" />
+          <div class="about-badge">
+            <strong>Est. in</strong>
+            <span>Kamukunji</span>
+          </div>
+        </div>
+        <div class="about-content">
+          <span class="section-tag">About Meso Households</span>
+          <h2>The One-Stop Household Solution in Nairobi</h2>
+          <p>
+            Meso Households is your trusted household shop located in the heart of
+            <strong>Kamukunji, Nairobi</strong>. We specialise in everything your kitchen and
+            home needs — flasks, plates, blenders, thermos, bottles, electric kettles, cooking
+            pots, cutlery and much more.
+          </p>
+          <p>
+            Whether you're setting up a new home, restocking a hotel, or just replacing that
+            worn-out kettle, we've got you covered with durable brands, fair prices and
+            service that treats you like family.
+          </p>
+          <ul class="about-list">
+            <li>✔ Quality brands you can trust</li>
+            <li>✔ Wholesale &amp; retail quantities</li>
+            <li>✔ Genuine product guidance</li>
+            <li>✔ Delivery across Nairobi</li>
+          </ul>
+          <div class="about-actions">
+            <a href="#products" class="btn btn-primary">Explore Our Products</a>
+            <a href="https://wa.me/254742005725?text=Hello%20Meso%20Households!%20I%27d%20like%20to%20enquire%20about%20your%20household%20products." target="_blank" rel="noopener" class="btn btn-outline">Chat With Us</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Products ===== -->
+    <section class="products section" id="products">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-tag">Our Products</span>
+          <h2>Household Essentials We Stock</h2>
+          <p>Tap a category to browse — add items to your cart and order directly on WhatsApp.</p>
+        </div>
+
+        <div class="filter-bar" id="filterBar">
+          <button class="filter-btn active" data-filter="all">All Items</button>
+          <button class="filter-btn" data-filter="appliances">🍳 Kitchen Appliances</button>
+          <button class="filter-btn" data-filter="flasks">🧴 Flasks &amp; Thermos</button>
+          <button class="filter-btn" data-filter="dining">🍽️ Dining</button>
+          <button class="filter-btn" data-filter="cookware">🥘 Cookware</button>
+        </div>
+
+        <div class="products-grid" id="productsGrid"><!-- injected by JS --></div>
+      </div>
+    </section>
+
+    <!-- ===== Why us ===== -->
+    <section class="why section" id="why">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-tag">Why Choose Us</span>
+          <h2>Why Kamukunji Shops With Us</h2>
+          <p>We're not just a shop — we're the reliable partner your household deserves.</p>
+        </div>
+        <div class="why-grid">
+          <div class="why-card">
+            <span class="why-icon">🏆</span>
+            <h3>Quality You Can Feel</h3>
+            <p>Every product we stock is hand-picked for durability and performance, so you buy once and buy right.</p>
+          </div>
+          <div class="why-card">
+            <span class="why-icon">💰</span>
+            <h3>Prices That Respect You</h3>
+            <p>We buy smart so you save. Wholesale-friendly prices on everything from single pieces to bulk orders.</p>
+          </div>
+          <div class="why-card">
+            <span class="why-icon">🛍️</span>
+            <h3>Huge Variety</h3>
+            <p>Flasks, thermos, plates, blenders, kettles, bottles, pots, cutlery — if your home needs it, we have it.</p>
+          </div>
+          <div class="why-card">
+            <span class="why-icon">📍</span>
+            <h3>Easy to Find</h3>
+            <p>Right in Kamukunji at Muthithu Building, Ground Floor Shop GF02 — a short walk from the main market.</p>
+          </div>
+          <div class="why-card">
+            <span class="why-icon">🚚</span>
+            <h3>We Deliver</h3>
+            <p>Can't make it to the shop? Order on WhatsApp and we'll deliver across Nairobi.</p>
+          </div>
+          <div class="why-card">
+            <span class="why-icon">❤️</span>
+            <h3>Service With a Smile</h3>
+            <p>Our team listens, advises honestly and never pushes you to buy what you don't need.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Testimonials ===== -->
+    <section class="testimonials section">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-tag">Testimonials</span>
+          <h2>What Our Customers Say</h2>
+        </div>
+        <div class="testi-grid">
+          <div class="testi-card">
+            <div class="testi-stars">★★★★★</div>
+            <p>"Got my full kitchen set here — kettle, blender, pots and plates. Best prices in Kamukunji and the staff helped me choose well."</p>
+            <div class="testi-person"><span class="testi-avatar">M</span><div><strong>Mercy W.</strong><small>Kamukunji Resident</small></div></div>
+          </div>
+          <div class="testi-card">
+            <div class="testi-stars">★★★★★</div>
+            <p>"I run a small hotel and buy my flasks and thermos in bulk from Meso. Consistent quality, fair prices, never disappointed."</p>
+            <div class="testi-person"><span class="testi-avatar">J</span><div><strong>James K.</strong><small>Hotel Owner</small></div></div>
+          </div>
+          <div class="testi-card">
+            <div class="testi-stars">★★★★★</div>
+            <p>"Ordered on WhatsApp and my water bottles were delivered the same day. This is now my one-stop shop for the house."</p>
+            <div class="testi-person"><span class="testi-avatar">A</span><div><strong>Amina S.</strong><small>Eastleigh</small></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== CTA banner ===== -->
+    <section class="cta">
+      <div class="container cta-inner">
+        <div>
+          <h2>Setting Up or Restocking Your Home?</h2>
+          <p>Call us or send a WhatsApp message — we'll prepare your order before you arrive.</p>
+        </div>
+        <div class="cta-actions">
+          <a href="https://wa.me/254742005725?text=Hello%20Meso%20Households!%20I%27d%20like%20to%20place%20an%20order." target="_blank" rel="noopener" class="btn btn-whatsapp btn-lg">
+            <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.39-1.47-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.44-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.62-.92-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.49 0 1.47 1.07 2.89 1.22 3.09.15.2 2.11 3.22 5.11 4.51.71.31 1.27.49 1.7.63.72.23 1.37.2 1.88.12.57-.09 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35zm-5.45 7.23a8.3 8.3 0 0 1-4.23-1.16l-.3-.18-3.14.82.84-3.06-.2-.31a8.3 8.3 0 0 1-1.28-4.44c0-4.6 3.75-8.35 8.37-8.35a8.3 8.3 0 0 1 8.35 8.37c0 4.6-3.76 8.34-8.41 8.34zm8.42-18.37C18.85 1.75 17.06 1 15.1 1h-.07A11.11 11.11 0 0 0 3.94 12.14c0 1.96.51 3.87 1.49 5.56L3.85 23l5.44-1.42a11.05 11.05 0 0 0 5.3 1.35h.01c6.15 0 11.15-5 11.16-11.14 0-2.97-1.16-5.77-3.27-7.87z"/></svg>
+            Order on WhatsApp
+          </a>
+          <a href="tel:+254742005725" class="btn btn-light btn-lg">📞 0742 005 725</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Visit us ===== -->
+    <section class="visit section" id="visit">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-tag">Visit Us</span>
+          <h2>Find Us in Kamukunji</h2>
+          <p>We're easy to reach — right in the heart of Nairobi's famous Kamukunji market area.</p>
+        </div>
+        <div class="visit-grid">
+          <div class="visit-card">
+            <div class="visit-row">
+              <span class="visit-icon">📍</span>
+              <div>
+                <h4>Our Location</h4>
+                <p>Muthithu Building, Shop GF02<br />Kamukunji, Nairobi, Kenya</p>
+              </div>
+            </div>
+            <div class="visit-row">
+              <span class="visit-icon">📞</span>
+              <div>
+                <h4>Call / WhatsApp</h4>
+                <p><a href="tel:+254742005725">0742 005 725</a><br />
+                <a href="https://wa.me/254742005725" target="_blank" rel="noopener">Chat on WhatsApp</a></p>
+              </div>
+            </div>
+            <div class="visit-row">
+              <span class="visit-icon">🕒</span>
+              <div>
+                <h4>Opening Hours</h4>
+                <p>Monday – Saturday: 7:30 AM – 6:30 PM<br />Sunday &amp; Holidays: 9:00 AM – 4:00 PM</p>
+              </div>
+            </div>
+            <div class="visit-row">
+              <span class="visit-icon">🚌</span>
+              <div>
+                <h4>Getting Here</h4>
+                <p>Alight at Kamukunji market stage — Muthithu Building is a 2-minute walk away, Ground Floor, Shop GF02.</p>
+              </div>
+            </div>
+            <div class="visit-actions">
+              <a href="https://www.google.com/maps/dir/?api=1&destination=Kamukunji%2C%20Nairobi%2C%20Kenya" target="_blank" rel="noopener" class="btn btn-primary">Get Directions</a>
+              <a href="https://wa.me/254742005725?text=Hello%20Meso%20Households!%20Please%20share%20directions%20to%20your%20shop." target="_blank" rel="noopener" class="btn btn-outline">Ask on WhatsApp</a>
+            </div>
+          </div>
+          <div class="map-wrap">
+            <iframe
+              src="https://www.google.com/maps?q=Kamukunji%2C+Nairobi%2C+Kenya&output=embed"
+              title="Map showing Meso Households location in Kamukunji, Nairobi"
+              loading="lazy"
+              allowfullscreen
+              referrerpolicy="no-referrer-when-downgrade"></iframe>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== Footer ===== -->
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div class="footer-col footer-brand">
+        <a href="#home" class="brand brand-footer">
+          <span class="brand-icon">
+            <svg viewBox="0 0 24 24" width="26" height="26"><path fill="currentColor" d="M12 3 2 12h3v8h6v-6h2v6h6v-8h3L12 3z"/></svg>
+          </span>
+          <span class="brand-text"><strong>Meso Households</strong><small>One-Stop Household Solution</small></span>
+        </a>
+        <p>Your trusted partner for quality household essentials in Kamukunji, Nairobi — flasks, thermos, plates, blenders, electric kettles, bottles, cookware and more.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <ul>
+          <li><a href="#home">Home</a></li>
+          <li><a href="#about">About Us</a></li>
+          <li><a href="#products">Products</a></li>
+          <li><a href="#why">Why Choose Us</a></li>
+          <li><a href="#visit">Visit Us</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Our Products</h4>
+        <ul>
+          <li><a href="#products">Flasks &amp; Thermos</a></li>
+          <li><a href="#products">Electric Kettles</a></li>
+          <li><a href="#products">Blenders</a></li>
+          <li><a href="#products">Plates &amp; Cutlery</a></li>
+          <li><a href="#products">Cooking Pots</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contact Us</h4>
+        <ul class="footer-contact">
+          <li>📍 Muthithu Building, Shop GF02,<br />Kamukunji, Nairobi</li>
+          <li>📞 <a href="tel:+254742005725">0742 005 725</a></li>
+          <li>🕒 Mon – Sat: 7:30 AM – 6:30 PM</li>
+        </ul>
+        <a href="https://wa.me/254742005725" target="_blank" rel="noopener" class="btn btn-whatsapp btn-sm footer-wa">
+          <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.39-1.47-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.44-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.62-.92-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.49 0 1.47 1.07 2.89 1.22 3.09.15.2 2.11 3.22 5.11 4.51.71.31 1.27.49 1.7.63.72.23 1.37.2 1.88.12.57-.09 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35zm-5.45 7.23a8.3 8.3 0 0 1-4.23-1.16l-.3-.18-3.14.82.84-3.06-.2-.31a8.3 8.3 0 0 1-1.28-4.44c0-4.6 3.75-8.35 8.37-8.35a8.3 8.3 0 0 1 8.35 8.37c0 4.6-3.76 8.34-8.41 8.34zm8.42-18.37C18.85 1.75 17.06 1 15.1 1h-.07A11.11 11.11 0 0 0 3.94 12.14c0 1.96.51 3.87 1.49 5.56L3.85 23l5.44-1.42a11.05 11.05 0 0 0 5.3 1.35h.01c6.15 0 11.15-5 11.16-11.14 0-2.97-1.16-5.77-3.27-7.87z"/></svg>
+          WhatsApp Us
+        </a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container footer-bottom-inner">
+        <p>© <span id="year"></span> Meso Households — Kamukunji, Nairobi. All rights reserved.</p>
+        <p>Made with ❤️ for Kenyan homes 🇰🇪</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===== Floating buttons ===== -->
+  <a class="whatsapp-float" href="https://wa.me/254742005725?text=Hello%20Meso%20Households!%20I%27d%20like%20to%20make%20an%20enquiry." target="_blank" rel="noopener" aria-label="Chat on WhatsApp">
+    <svg viewBox="0 0 24 24" width="28" height="28"><path fill="currentColor" d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.39-1.47-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.44-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.62-.92-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.49 0 1.47 1.07 2.89 1.22 3.09.15.2 2.11 3.22 5.11 4.51.71.31 1.27.49 1.7.63.72.23 1.37.2 1.88.12.57-.09 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35zm-5.45 7.23a8.3 8.3 0 0 1-4.23-1.16l-.3-.18-3.14.82.84-3.06-.2-.31a8.3 8.3 0 0 1-1.28-4.44c0-4.6 3.75-8.35 8.37-8.35a8.3 8.3 0 0 1 8.35 8.37c0 4.6-3.76 8.34-8.41 8.34zm8.42-18.37C18.85 1.75 17.06 1 15.1 1h-.07A11.11 11.11 0 0 0 3.94 12.14c0 1.96.51 3.87 1.49 5.56L3.85 23l5.44-1.42a11.05 11.05 0 0 0 5.3 1.35h.01c6.15 0 11.15-5 11.16-11.14 0-2.97-1.16-5.77-3.27-7.87z"/></svg>
+  </a>
+  <button class="back-top" id="backTop" aria-label="Back to top">
+    <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M7.41 15.41 12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
+  </button>
+
+  <!-- ===== Toast ===== -->
+  <div class="toast" id="toast"></div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
