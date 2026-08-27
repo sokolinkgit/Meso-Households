@@ -774,6 +774,8 @@
   async function optimiseImage(file, { maxEdge = MAX_UPLOAD_EDGE, quality = 0.86, type = "image/webp" } = {}) {
     if (!file) throw new Error("No file selected.");
     if (!/^image\//.test(file.type || "")) throw new Error("Please choose an image file (JPG, PNG, WebP, GIF…).");
+    // never rasterise animations or vectors — re-encoding would flatten them
+    if (/gif|svg/i.test(file.type || "")) return { blob: file, width: 0, height: 0 };
     if (!global.createImageBitmap || !global.OffscreenCanvas) return { blob: file, width: 0, height: 0 };
     try {
       const bitmap = await global.createImageBitmap(file);
