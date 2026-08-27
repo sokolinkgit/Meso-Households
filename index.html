@@ -70,6 +70,31 @@
     </div>
   </header>
 
+  <!-- ===== Admin studio bar (only visible to signed-in admins) ===== -->
+  <div class="admin-bar" id="adminBar" hidden>
+    <div class="container admin-bar__inner">
+      <span class="admin-bar__badge" title="You are signed in as an administrator">
+        <svg viewBox="0 0 24 24" width="15" height="15"><path fill="currentColor" d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Zm0 5.2 1.6 3.3 3.6.5-2.6 2.5.6 3.5-3.2-1.7-3.2 1.7.6-3.5L7 11l3.6-.5L12 7.2Z"/></svg>
+        Admin studio
+      </span>
+      <span class="admin-bar__counts" id="adminCounts"></span>
+      <label class="switch" title="Turn the editing controls on or off — with them off you see exactly what a visitor sees">
+        <input type="checkbox" id="editModeToggle" />
+        <span class="switch__track"><span class="switch__thumb"></span></span>
+        <span class="switch__label">Edit mode</span>
+      </label>
+      <div class="admin-bar__actions">
+        <button class="btn btn-xs btn-primary" id="adminAddProduct"><span>＋</span> New product</button>
+        <button class="btn btn-xs btn-outline-dark" id="adminAddCategory"><span>＋</span> New category</button>
+        <button class="btn btn-xs btn-outline-dark" id="adminMediaBtn">🖼 Media library</button>
+        <button class="btn btn-xs btn-ghost-dark" data-admin-preview>View as visitor</button>
+        <button class="btn btn-xs btn-ghost-dark" id="adminSignOut">Sign out</button>
+      </div>
+      <button class="chip" id="adminStatus" type="button" title="Check what is connected — tables, uploads, realtime"></button>
+      <span class="admin-bar__user" id="adminUserEmail"></span>
+    </div>
+  </div>
+
   <!-- ===== Cart drawer ===== -->
   <div class="cart-overlay" id="cartOverlay"></div>
   <aside class="cart-drawer" id="cartDrawer" aria-label="Shopping cart">
@@ -125,26 +150,28 @@
         </div>
         <div class="hero-visual">
           <div class="hero-slideshow" id="heroSlideshow">
-            <figure class="hero-slide active">
-              <img src="images/slide-1.jpg" alt="Happy customer holding her new stainless steel vacuum flask" />
-              <figcaption class="slide-caption"><strong>Vacuum Flask</strong><span>KES 1,500 • Another happy customer</span></figcaption>
-            </figure>
-            <figure class="hero-slide">
-              <img src="images/slide-2.jpg" alt="Happy customer with his brand new blender" />
-              <figcaption class="slide-caption"><strong>Heavy-Duty Blender</strong><span>KES 4,500 • Another happy customer</span></figcaption>
-            </figure>
-            <figure class="hero-slide">
-              <img src="images/slide-3.jpg" alt="Smiling customer carrying her new dinner plates and mugs" />
-              <figcaption class="slide-caption"><strong>Plates &amp; Mugs</strong><span>KES 1,000+ • Another happy customer</span></figcaption>
-            </figure>
-            <figure class="hero-slide">
-              <img src="images/slide-4.jpg" alt="Happy couple holding their new cooking pots set" />
-              <figcaption class="slide-caption"><strong>Cooking Pots Set</strong><span>KES 5,500 • Another happy customer</span></figcaption>
-            </figure>
-            <figure class="hero-slide">
-              <img src="images/slide-5.jpg" alt="Delighted customer holding his new electric kettle" />
-              <figcaption class="slide-caption"><strong>Electric Kettle</strong><span>KES 2,200 • Another happy customer</span></figcaption>
-            </figure>
+            <div class="hero-track" id="heroTrack">
+              <figure class="hero-slide active">
+                <img src="images/slide-1.jpg" alt="Happy customer holding her new stainless steel vacuum flask" />
+                <figcaption class="slide-caption"><strong>Vacuum Flask</strong><span>KES 1,500 • Another happy customer</span></figcaption>
+              </figure>
+              <figure class="hero-slide">
+                <img src="images/slide-2.jpg" alt="Happy customer with his brand new blender" />
+                <figcaption class="slide-caption"><strong>Heavy-Duty Blender</strong><span>KES 4,500 • Another happy customer</span></figcaption>
+              </figure>
+              <figure class="hero-slide">
+                <img src="images/slide-3.jpg" alt="Smiling customer carrying her new dinner plates and mugs" />
+                <figcaption class="slide-caption"><strong>Plates &amp; Mugs</strong><span>KES 1,000+ • Another happy customer</span></figcaption>
+              </figure>
+              <figure class="hero-slide">
+                <img src="images/slide-4.jpg" alt="Happy couple holding their new cooking pots set" />
+                <figcaption class="slide-caption"><strong>Cooking Pots Set</strong><span>KES 5,500 • Another happy customer</span></figcaption>
+              </figure>
+              <figure class="hero-slide">
+                <img src="images/slide-5.jpg" alt="Delighted customer holding his new electric kettle" />
+                <figcaption class="slide-caption"><strong>Electric Kettle</strong><span>KES 2,200 • Another happy customer</span></figcaption>
+              </figure>
+            </div>
             <button class="slide-nav slide-prev" id="slidePrev" aria-label="Previous photo">
               <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12l4.58-4.59z"/></svg>
             </button>
@@ -152,7 +179,9 @@
               <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
             </button>
             <div class="slider-dots" id="sliderDots"></div>
+            <span class="slide-counter" id="slideCounter" aria-hidden="true"></span>
           </div>
+          <div class="hero-admin-bar" id="heroAdminBar" hidden></div>
           <div class="hero-card hero-card-top">
             <strong>Best Prices</strong>
             <span>Wholesale &amp; retail</span>
@@ -223,17 +252,16 @@
           <span class="section-tag">Our Products</span>
           <h2>Household Essentials We Stock</h2>
           <p>Tap a category to browse — add items to your cart or order directly on WhatsApp.</p>
+          <p class="edit-hint">
+            <b>Edit mode is on.</b> Click any name, price or description to retype it · use the
+            <em>In&nbsp;category</em> dropdown on a card to move it · 🖼 to upload, swap or delete a photo ·
+            every change saves to Supabase instantly.
+          </p>
         </div>
 
-        <div class="filter-bar" id="filterBar">
-          <button class="filter-btn active" data-filter="all">All Items</button>
-          <button class="filter-btn" data-filter="appliances">🍳 Kitchen Appliances</button>
-          <button class="filter-btn" data-filter="flasks">🧴 Flasks &amp; Thermos</button>
-          <button class="filter-btn" data-filter="dining">🍽️ Dining</button>
-          <button class="filter-btn" data-filter="cookware">🥘 Cookware</button>
-        </div>
+        <div class="filter-bar" id="filterBar"><!-- injected by JS --></div>
 
-        <div class="products-grid" id="productsGrid"><!-- injected by JS --></div>
+        <div class="catalog" id="catalog"><!-- injected by JS, grouped by category --></div>
       </div>
     </section>
 
@@ -493,7 +521,7 @@
       </div>
       <div class="footer-col">
         <h4>Our Products</h4>
-        <ul>
+        <ul id="footerCategories">
           <li><a href="#products">Flasks &amp; Thermos</a></li>
           <li><a href="#products">Electric Kettles</a></li>
           <li><a href="#products">Blenders</a></li>
@@ -517,7 +545,9 @@
     <div class="footer-bottom">
       <div class="container footer-bottom-inner">
         <p>© <span id="year"></span> Meso Households — Kamukunji, Nairobi. All rights reserved.</p>
-        <p>Quality. Practical. Affordable. — Made with ❤️ for Kenyan homes 🇰🇪</p>
+        <p>Quality. Practical. Affordable. — Made with ❤️ for Kenyan homes 🇰🇪
+          <a href="#admin" data-open-login class="footer-admin-link">Site management</a>
+        </p>
       </div>
     </div>
   </footer>
@@ -530,37 +560,221 @@
     <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M7.41 15.41 12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
   </button>
 
+  <!-- ============================================================
+       ADMIN STUDIO — every editor opens on top of the real page,
+       so an admin always sees the shop exactly as visitors do.
+       ============================================================ -->
+
   <!-- ===== Admin login ===== -->
-  <dialog class="admin-dialog" id="adminDialog">
-    <form class="admin-form" id="loginForm" method="dialog">
-      <button class="dialog-close" id="loginClose" type="button" aria-label="Close">&times;</button>
-      <span class="section-tag">Admin access</span>
-      <h2>Sign in to manage the shop</h2>
-      <p class="admin-help">This area is for authorised Meso Households administrators only.</p>
-      <label>Email<input type="email" id="loginEmail" autocomplete="username" required /></label>
-      <label>Password<input type="password" id="loginPassword" autocomplete="current-password" required /></label>
-      <button class="btn btn-primary btn-block" type="submit">Sign in</button>
-      <p class="admin-error" id="loginError" role="alert"></p>
+  <dialog class="sheet sheet--sm" id="adminDialog">
+    <form class="sheet__form" id="loginForm">
+      <header class="sheet__head sheet__head--tight">
+        <div><span class="section-tag">Admin access</span><h2>Sign in to manage the shop</h2></div>
+        <button class="sheet__x" type="button" data-close aria-label="Close">&times;</button>
+      </header>
+      <div class="sheet__body">
+        <p class="sheet__help">This area is for authorised Meso Households administrators only. Once signed in you edit the live page itself — no separate dashboard to hunt through.</p>
+        <label class="field"><span>Email</span><input type="email" id="loginEmail" autocomplete="username" placeholder="admin@mesohouseholds.co.ke" required /></label>
+        <label class="field"><span>Password</span><input type="password" id="loginPassword" autocomplete="current-password" required /></label>
+        <p class="mode-hint" id="loginModeHint"></p>
+      </div>
+      <footer class="sheet__foot">
+        <p class="admin-error" id="loginError" role="alert"></p>
+        <button class="btn btn-primary" id="loginSubmit" type="submit">Sign in</button>
+      </footer>
     </form>
   </dialog>
 
-  <section class="admin-panel" id="adminPanel" hidden>
-    <div class="container">
-      <div class="admin-panel-head"><div><span class="section-tag">Admin dashboard</span><h2>Manage catalogue</h2></div><button class="btn btn-outline btn-sm" id="logoutBtn">Sign out</button></div>
-      <div class="admin-columns">
-        <form class="admin-card" id="categoryForm"><h3 id="categoryFormTitle">Add category</h3><input type="hidden" id="categoryId" /><label>Name<input id="categoryName" required /></label><label>Slug<input id="categorySlug" required pattern="[a-z0-9-]+" /></label><label>Emoji<input id="categoryEmoji" maxlength="4" /></label><button class="btn btn-primary" type="submit">Save category</button><button class="btn-text" type="button" id="cancelCategory">Cancel edit</button></form>
-        <form class="admin-card" id="productForm"><h3 id="productFormTitle">Add product</h3><input type="hidden" id="productId" /><label>Name<input id="productName" required /></label><label>Category<select id="productCategory" required></select></label><label>Price (KES)<input id="productPrice" type="number" min="0" step="0.01" required /></label><label>Image URL<input id="productImage" placeholder="images/product.jpg" required /></label><label>Tag<input id="productTag" placeholder="Best Seller" /></label><label>Description<textarea id="productDescription" rows="3"></textarea></label><button class="btn btn-primary" type="submit">Save product</button><button class="btn-text" type="button" id="cancelProduct">Cancel edit</button></form>
+  <!-- ===== Product editor ===== -->
+  <dialog class="sheet" id="productDialog">
+    <form class="sheet__form" id="productForm">
+      <header class="sheet__head">
+        <div><span class="section-tag" id="productKicker">New product</span><h2 id="productDialogTitle">Add a product</h2></div>
+        <button class="sheet__x" type="button" data-close aria-label="Close">&times;</button>
+      </header>
+      <div class="sheet__body">
+        <div class="sheet__grid">
+          <label class="field field--wide"><span>Name</span><input type="text" id="pfName" placeholder="Stainless Steel Vacuum Flask" autocomplete="off" /></label>
+          <label class="field"><span>Category — change it here or straight from the card</span><select id="pfCategory"></select></label>
+          <label class="field"><span>Price (KES)</span><input type="number" id="pfPrice" min="0" step="0.01" placeholder="1500" /></label>
+          <label class="field"><span>Badge / tag</span><input type="text" id="pfTag" placeholder="Best Seller" autocomplete="off" />
+            <span class="chips">
+              <button type="button" class="chip-btn" data-tag-preset="Best Seller">Best Seller</button>
+              <button type="button" class="chip-btn" data-tag-preset="Hot">Hot</button>
+              <button type="button" class="chip-btn" data-tag-preset="New">New</button>
+              <button type="button" class="chip-btn" data-tag-preset="none">No badge</button>
+            </span>
+          </label>
+          <label class="field field--wide"><span>Description</span><textarea id="pfDesc" rows="3" placeholder="What makes it worth buying?"></textarea></label>
+          <label class="field"><span>Order in category</span><input type="number" id="pfSort" min="0" step="1" /></label>
+          <div class="field field--wide" id="pfImage"></div>
+        </div>
       </div>
-      <div class="admin-card admin-table-wrap"><h3>Categories</h3><div id="categoryRows"></div></div>
-      <div class="admin-card admin-table-wrap"><h3>Products</h3><div id="productRows"></div></div>
-    </div>
-  </section>
+      <footer class="sheet__foot">
+        <p class="autosave" data-role="status">Edits save as soon as you leave a field</p>
+        <div class="sheet__btns">
+          <button type="button" class="btn btn-sm btn-danger-ghost" id="pfDelete">Delete</button>
+          <button type="button" class="btn btn-sm btn-ghost" data-close>Cancel</button>
+          <button type="button" class="btn btn-sm btn-outline" id="pfSaveNew">Save &amp; add another</button>
+          <button type="button" class="btn btn-sm btn-primary" id="pfSave">Save product</button>
+        </div>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- ===== Category editor ===== -->
+  <dialog class="sheet" id="categoryDialog">
+    <form class="sheet__form" id="categoryForm">
+      <header class="sheet__head">
+        <div><span class="section-tag" id="categoryKicker">New category</span><h2 id="categoryDialogTitle">Add a category</h2></div>
+        <button class="sheet__x" type="button" data-close aria-label="Close">&times;</button>
+      </header>
+      <div class="sheet__body">
+        <div class="sheet__grid">
+          <label class="field"><span>Category name</span><input type="text" id="cfName" placeholder="Kitchen Appliances" autocomplete="off" /></label>
+          <label class="field"><span>Icon</span><input type="text" id="cfEmoji" maxlength="4" placeholder="🍳" autocomplete="off" />
+            <span class="chips">
+              <button type="button" class="chip-btn" data-emoji-preset="🍳">🍳</button>
+              <button type="button" class="chip-btn" data-emoji-preset="🧴">🧴</button>
+              <button type="button" class="chip-btn" data-emoji-preset="🍽️">🍽️</button>
+              <button type="button" class="chip-btn" data-emoji-preset="🥘">🥘</button>
+              <button type="button" class="chip-btn" data-emoji-preset="🫖">🫖</button>
+              <button type="button" class="chip-btn" data-emoji-preset="🧺">🧺</button>
+            </span>
+          </label>
+          <label class="field"><span>Slug (used in links &amp; filters)</span><input type="text" id="cfSlug" pattern="[a-z0-9-]+" placeholder="kitchen-appliances" autocomplete="off" /></label>
+          <label class="field"><span>Order on page</span><input type="number" id="cfSort" min="0" step="1" /></label>
+          <p class="sheet__note" id="cfProducts"><span id="cfProductCount"></span></p>
+          <label class="field field--wide" id="cfMoveAllWrap"><span>Move every product in this category to another one</span><select id="cfMoveAll"></select></label>
+          <div class="field field--wide" id="cfImage"></div>
+        </div>
+      </div>
+      <footer class="sheet__foot">
+        <p class="autosave" data-role="status">Nothing is saved until you leave a field or press Save</p>
+        <div class="sheet__btns">
+          <button type="button" class="btn btn-sm btn-danger-ghost" id="cfDelete">Delete category</button>
+          <button type="button" class="btn btn-sm btn-ghost" data-close>Cancel</button>
+          <button type="button" class="btn btn-sm btn-primary" id="cfSave">Save category</button>
+        </div>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- ===== Photo manager for one product (card 🖼 button) ===== -->
+  <dialog class="sheet sheet--wide" id="imageDialog">
+    <form class="sheet__form" id="imageForm">
+      <header class="sheet__head sheet__head--tight">
+        <div><span class="section-tag">Photo</span><h2 id="imageDialogTitle">Product photo</h2></div>
+        <button class="sheet__x" type="button" data-close aria-label="Close">&times;</button>
+      </header>
+      <div class="sheet__body">
+        <div class="field field--wide" id="ifImage"></div>
+      </div>
+      <footer class="sheet__foot">
+        <p class="autosave" data-role="status">Uploads save to the product straight away</p>
+        <div class="sheet__btns"><button type="button" class="btn btn-sm btn-primary" id="imageDialogClose" data-close>Done</button></div>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- ===== Media library ===== -->
+  <dialog class="sheet sheet--wide" id="mediaDialog">
+    <form class="sheet__form" id="mediaForm">
+      <header class="sheet__head">
+        <div><span class="section-tag">Supabase Storage</span><h2>Media library</h2></div>
+        <button class="sheet__x" type="button" data-close aria-label="Close">&times;</button>
+      </header>
+      <div class="sheet__body">
+        <p class="sheet__help">Photos you upload here live in the <code>product-images</code> bucket and are served on public URLs. Delete a file any time — it cannot be deleted while a product still uses it.</p>
+        <div class="sheet__btns sheet__btns--start">
+          <button type="button" class="btn btn-sm btn-primary" id="mediaUploadBtn">⬆ Upload photos</button>
+          <input type="file" id="mediaUploadInput" accept="image/*" multiple hidden />
+        </div>
+        <div id="mediaGridHost" class="library library--open"></div>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ===== Hero slide editor ===== -->
+  <dialog class="sheet" id="heroDialog">
+    <form class="sheet__form" id="heroForm">
+      <header class="sheet__head">
+        <div><span class="section-tag" id="heroKicker">Hero photo</span><h2 id="heroDialogTitle">Add a homepage photo</h2></div>
+        <button class="sheet__x" type="button" data-close aria-label="Close">&times;</button>
+      </header>
+      <div class="sheet__body">
+        <div class="sheet__grid">
+          <label class="field"><span>Heading</span><input type="text" id="hfTitle" placeholder="Vacuum Flask" autocomplete="off" /></label>
+          <label class="field"><span>Caption line</span><input type="text" id="hfSubtitle" placeholder="KES 1,500 • Another happy customer" autocomplete="off" /></label>
+          <label class="field"><span>Order</span><input type="number" id="hfSort" min="0" step="1" /></label>
+          <label class="check"><input type="checkbox" id="hfActive" checked /><span>Show to visitors</span></label>
+          <div class="field field--wide" id="hfImage"></div>
+        </div>
+      </div>
+      <footer class="sheet__foot">
+        <p class="autosave" data-role="status">The slider updates instantly</p>
+        <div class="sheet__btns">
+          <button type="button" class="btn btn-sm btn-danger-ghost" id="hfDelete">Remove photo</button>
+          <button type="button" class="btn btn-sm btn-ghost" data-close>Cancel</button>
+          <button type="button" class="btn btn-sm btn-primary" id="hfSave">Save photo</button>
+        </div>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- ===== Confirm (used for all deletes) ===== -->
+  <dialog class="sheet sheet--sm" id="confirmDialog">
+    <form class="sheet__form" id="confirmForm">
+      <header class="sheet__head sheet__head--tight">
+        <div><h2 id="confirmTitle">Are you sure?</h2></div>
+        <button class="sheet__x" type="button" data-close aria-label="Close">&times;</button>
+      </header>
+      <div class="sheet__body">
+        <p class="sheet__help" id="confirmText"></p>
+        <label class="field" id="confirmSelectWrap"><span id="confirmSelectLabel">Choose</span><select id="confirmSelect"></select></label>
+        <label class="check" id="confirmCheckWrap"><input type="checkbox" id="confirmCheck" /><span id="confirmCheckLabel"></span></label>
+      </div>
+      <footer class="sheet__foot sheet__foot--end">
+        <div class="sheet__btns">
+          <button type="button" class="btn btn-sm btn-ghost" data-close>Cancel</button>
+          <button type="button" class="btn btn-sm btn-danger" id="confirmGo">Confirm</button>
+        </div>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- ===== Connection / setup status ===== -->
+  <dialog class="sheet sheet--wide" id="setupDialog">
+    <form class="sheet__form" id="setupForm">
+      <header class="sheet__head">
+        <div><span class="section-tag">Connections</span><h2>Where things save</h2></div>
+        <button class="sheet__x" type="button" data-close aria-label="Close">&times;</button>
+      </header>
+      <div class="sheet__body">
+        <p class="setup__mode" id="setupMode"></p>
+        <div class="setup-rows" id="setupRows"></div>
+        <p class="sheet__help">If something is missing, paste <code>supabase-schema.sql</code> into the Supabase SQL editor and run it once. Existing products are kept.</p>
+      </div>
+      <footer class="sheet__foot">
+        <div class="sheet__btns">
+          <button type="button" class="btn btn-sm btn-ghost" id="setupSqlBtn">Copy setup note</button>
+          <button type="button" class="btn btn-sm btn-ghost" id="setupStorageBtn">Copy storage SQL</button>
+          <button type="button" class="btn btn-sm btn-outline" id="setupRecheck">Check again</button>
+          <button type="button" class="btn btn-sm btn-primary" data-close>Close</button>
+        </div>
+      </footer>
+    </form>
+  </dialog>
 
   <!-- ===== Toast ===== -->
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/admin.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>
