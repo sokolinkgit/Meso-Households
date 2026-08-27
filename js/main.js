@@ -5,9 +5,17 @@
 
 const SHOP_PHONE_DISPLAY = "0742 005 725";
 const WHATSAPP_NUMBER = "254742005725";
+const supabaseClient = window.supabase?.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+let CATEGORIES = [
+  { id: "appliances", slug: "appliances", name: "Kitchen Appliances", emoji: "🍳" },
+  { id: "flasks", slug: "flasks", name: "Flasks & Thermos", emoji: "🧴" },
+  { id: "dining", slug: "dining", name: "Dining", emoji: "🍽️" },
+  { id: "cookware", slug: "cookware", name: "Cookware", emoji: "🥘" },
+];
+let isAdmin = false;
 
 /* ---------- Product catalogue ---------- */
-const PRODUCTS = [
+let PRODUCTS = [
   {
     id: "flask",
     name: "Stainless Steel Vacuum Flask",
@@ -118,6 +126,10 @@ function showToast(msg) {
 
 /* ---------- Render products ---------- */
 const productsGrid = $("#productsGrid");
+const escapeHtml = (value = "") => String(value).replace(/[&<>\"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '\"': "&quot;", "'": "&#039;" }[c]));
+function categoryLabel(slug) {
+  return CATEGORIES.find((c) => c.slug === slug)?.name || slug;
+}
 
 function renderProducts(filter = "all") {
   productsGrid.innerHTML = "";
@@ -139,9 +151,9 @@ function renderProducts(filter = "all") {
         ${p.tag ? `<span class="product-tag ${p.tag === "Hot" ? "hot" : ""}">${p.tag}</span>` : ""}
       </div>
       <div class="product-body">
-        <span class="product-cat">${p.categoryLabel}</span>
-        <h3>${p.name}</h3>
-        <p class="product-desc">${p.desc}</p>
+        <span class="product-cat">${escapeHtml(categoryLabel(p.category))}</span>
+        <h3>${escapeHtml(p.name)}</h3>
+        <p class="product-desc">${escapeHtml(p.desc)}</p>
         <div class="product-foot">
           <span class="product-price">${formatKES(p.price)}</span>
           <button class="add-btn" data-id="${p.id}" aria-label="Add ${p.name} to cart">
@@ -413,7 +425,69 @@ revealEls.forEach((el) => {
   observer.observe(el);
 });
 
+/* ---------- Supabase catalogue + admin ---------- */
+async function loadCatalogue() {
+  if (!supabaseClient) return;
+  const [{ data: cats, error: catError }, { data: rows, error: productError }] = await Promise.all([
+    supabaseClient.from("categories").select("*").order("sort_order"),
+    supabaseClient.from("products").select("*, categories(slug, name)").order("sort_order"),
+  ]);
+  if (!catError && cats?.length) CATEGORIES = cats;
+  if (!productError && rows?.length) PRODUCTS = rows.map((p) => ({ id: p.id, name: p.name, category: p.categories?.slug, categoryLabel: p.categories?.name, price: Number(p.price), image: p.image_url, tag: p.tag, desc: p.description }));
+  renderFilterBar();
+  renderProducts($(".filter-btn.active")?.dataset.filter || "all");
+}
+function renderFilterBar() {
+  filterBar.innerHTML = `<button class="filter-btn active" data-filter="all">All Items</button>` + CATEGORIES.map((c) => `<button class="filter-btn" data-filter="${escapeHtml(c.slug)}">${escapeHtml(c.emoji || "")} ${escapeHtml(c.name)}</button>`).join("");
+}
+function renderAdminTables() {
+  $("#categoryRows").innerHTML = CATEGORIES.map((c) => `<div class="admin-row"><span>${escapeHtml(c.emoji || "")} <strong>${escapeHtml(c.name)}</strong> <small>${escapeHtml(c.slug)}</small></span><span><button class="btn-text edit-category" data-id="${c.id}">Edit</button><button class="btn-text delete-category" data-id="${c.id}">Delete</button></span></div>`).join("");
+  $("#productRows").innerHTML = PRODUCTS.map((p) => `<div class="admin-row"><span><strong>${escapeHtml(p.name)}</strong><small>${escapeHtml(categoryLabel(p.category))} · ${formatKES(p.price)}</small></span><span><button class="btn-text edit-product" data-id="${p.id}">Edit</button><button class="btn-text delete-product" data-id="${p.id}">Delete</button></span></div>`).join("");
+  $("#productCategory").innerHTML = CATEGORIES.map((c) => `<option value="${escapeHtml(c.slug)}">${escapeHtml(c.name)}</option>`).join("");
+}
+function resetForms() { $("#categoryForm").reset(); $("#productForm").reset(); $("#categoryId").value = ""; $("#productId").value = ""; $("#categoryFormTitle").textContent = "Add category"; $("#productFormTitle").textContent = "Add product"; }
+function openAdmin() { $("#adminPanel").hidden = false; renderAdminTables(); $("#adminPanel").scrollIntoView({ behavior: "smooth" }); }
+async function refreshAdmin() { await loadCatalogue(); renderAdminTables(); }
+async function checkAdminSession() {
+  if (!supabaseClient) return;
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session) {
+    const { data } = await supabaseClient.from("admin_users").select("user_id").eq("user_id", session.user.id).maybeSingle();
+    isAdmin = !!data;
+  }
+  $("#adminPanel").hidden = !isAdmin;
+  if (isAdmin) openAdmin();
+}
+
+$("#homeIcon").addEventListener("click", (event) => {
+  const now = Date.now();
+  const clicks = Number($("#homeIcon").dataset.secretClicks || 0);
+  const started = Number($("#homeIcon").dataset.secretStarted || now);
+  const next = now - started <= 30000 ? clicks + 1 : 1;
+  $("#homeIcon").dataset.secretClicks = next;
+  $("#homeIcon").dataset.secretStarted = next === 1 ? now : started;
+  if (next >= 5) { event.preventDefault(); $("#adminDialog").showModal(); $("#loginEmail").focus(); $("#homeIcon").dataset.secretClicks = 0; }
+});
+$("#loginClose").addEventListener("click", () => $("#adminDialog").close());
+$("#loginForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!supabaseClient) return;
+  const { error } = await supabaseClient.auth.signInWithPassword({ email: $("#loginEmail").value.trim(), password: $("#loginPassword").value });
+  if (error) { $("#loginError").textContent = error.message; return; }
+  $("#loginError").textContent = ""; $("#adminDialog").close(); await checkAdminSession();
+  if (!isAdmin) showToast("Signed in, but this account is not an admin");
+});
+$("#logoutBtn").addEventListener("click", async () => { await supabaseClient?.auth.signOut(); isAdmin = false; $("#adminPanel").hidden = true; renderProducts(); showToast("Signed out"); });
+$("#categoryForm").addEventListener("submit", async (event) => { event.preventDefault(); if (!isAdmin) return; const id = $("#categoryId").value; const payload = { name: $("#categoryName").value.trim(), slug: $("#categorySlug").value.trim().toLowerCase(), emoji: $("#categoryEmoji").value.trim() }; const result = id ? await supabaseClient.from("categories").update(payload).eq("id", id) : await supabaseClient.from("categories").insert(payload); if (result.error) return showToast(result.error.message); resetForms(); await refreshAdmin(); showToast("Category saved"); });
+$("#productForm").addEventListener("submit", async (event) => { event.preventDefault(); if (!isAdmin) return; const id = $("#productId").value; const category = CATEGORIES.find((c) => c.slug === $("#productCategory").value); const payload = { name: $("#productName").value.trim(), category_id: category.id, price: Number($("#productPrice").value), image_url: $("#productImage").value.trim(), tag: $("#productTag").value.trim() || null, description: $("#productDescription").value.trim() }; const result = id ? await supabaseClient.from("products").update(payload).eq("id", id) : await supabaseClient.from("products").insert(payload); if (result.error) return showToast(result.error.message); resetForms(); await refreshAdmin(); showToast("Product saved"); });
+$("#cancelCategory").addEventListener("click", resetForms); $("#cancelProduct").addEventListener("click", resetForms);
+$("#adminPanel").addEventListener("click", async (event) => { const editCat = event.target.closest(".edit-category"); const delCat = event.target.closest(".delete-category"); const edit = event.target.closest(".edit-product"); const del = event.target.closest(".delete-product"); if (editCat) { const c = CATEGORIES.find((x) => String(x.id) === editCat.dataset.id); $("#categoryId").value = c.id; $("#categoryName").value = c.name; $("#categorySlug").value = c.slug; $("#categoryEmoji").value = c.emoji || ""; $("#categoryFormTitle").textContent = "Edit category"; } if (delCat && confirm("Delete this category? It must have no products.")) { const r = await supabaseClient.from("categories").delete().eq("id", delCat.dataset.id); if (r.error) showToast(r.error.message); else await refreshAdmin(); } if (edit) { const p = PRODUCTS.find((x) => String(x.id) === edit.dataset.id); $("#productId").value = p.id; $("#productName").value = p.name; $("#productCategory").value = p.category; $("#productPrice").value = p.price; $("#productImage").value = p.image; $("#productTag").value = p.tag || ""; $("#productDescription").value = p.desc; $("#productFormTitle").textContent = "Edit product"; } if (del && confirm("Delete this product?")) { const r = await supabaseClient.from("products").delete().eq("id", del.dataset.id); if (r.error) showToast(r.error.message); else await refreshAdmin(); } });
+
 /* ---------- Init ---------- */
 $("#year").textContent = new Date().getFullYear();
+renderFilterBar();
 renderProducts();
 renderCart();
+loadCatalogue();
+checkAdminSession();
+if (supabaseClient) supabaseClient.auth.onAuthStateChange(() => checkAdminSession());
