@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/admin.css" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>" />
 </head>
 <body>
@@ -35,7 +36,7 @@
   <!-- ===== Navbar ===== -->
   <header class="navbar" id="navbar">
     <div class="container navbar-inner">
-      <a href="#home" class="brand">
+      <a href="#home" class="brand" id="homeIcon" aria-label="Meso Households home">
         <span class="brand-icon">
           <svg viewBox="0 0 24 24" width="26" height="26"><path fill="currentColor" d="M12 3 2 12h3v8h6v-6h2v6h6v-8h3L12 3z"/></svg>
         </span>
@@ -529,9 +530,37 @@
     <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M7.41 15.41 12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"/></svg>
   </button>
 
+  <!-- ===== Admin login ===== -->
+  <dialog class="admin-dialog" id="adminDialog">
+    <form class="admin-form" id="loginForm" method="dialog">
+      <button class="dialog-close" id="loginClose" type="button" aria-label="Close">&times;</button>
+      <span class="section-tag">Admin access</span>
+      <h2>Sign in to manage the shop</h2>
+      <p class="admin-help">This area is for authorised Meso Households administrators only.</p>
+      <label>Email<input type="email" id="loginEmail" autocomplete="username" required /></label>
+      <label>Password<input type="password" id="loginPassword" autocomplete="current-password" required /></label>
+      <button class="btn btn-primary btn-block" type="submit">Sign in</button>
+      <p class="admin-error" id="loginError" role="alert"></p>
+    </form>
+  </dialog>
+
+  <section class="admin-panel" id="adminPanel" hidden>
+    <div class="container">
+      <div class="admin-panel-head"><div><span class="section-tag">Admin dashboard</span><h2>Manage catalogue</h2></div><button class="btn btn-outline btn-sm" id="logoutBtn">Sign out</button></div>
+      <div class="admin-columns">
+        <form class="admin-card" id="categoryForm"><h3 id="categoryFormTitle">Add category</h3><input type="hidden" id="categoryId" /><label>Name<input id="categoryName" required /></label><label>Slug<input id="categorySlug" required pattern="[a-z0-9-]+" /></label><label>Emoji<input id="categoryEmoji" maxlength="4" /></label><button class="btn btn-primary" type="submit">Save category</button><button class="btn-text" type="button" id="cancelCategory">Cancel edit</button></form>
+        <form class="admin-card" id="productForm"><h3 id="productFormTitle">Add product</h3><input type="hidden" id="productId" /><label>Name<input id="productName" required /></label><label>Category<select id="productCategory" required></select></label><label>Price (KES)<input id="productPrice" type="number" min="0" step="0.01" required /></label><label>Image URL<input id="productImage" placeholder="images/product.jpg" required /></label><label>Tag<input id="productTag" placeholder="Best Seller" /></label><label>Description<textarea id="productDescription" rows="3"></textarea></label><button class="btn btn-primary" type="submit">Save product</button><button class="btn-text" type="button" id="cancelProduct">Cancel edit</button></form>
+      </div>
+      <div class="admin-card admin-table-wrap"><h3>Categories</h3><div id="categoryRows"></div></div>
+      <div class="admin-card admin-table-wrap"><h3>Products</h3><div id="productRows"></div></div>
+    </div>
+  </section>
+
   <!-- ===== Toast ===== -->
   <div class="toast" id="toast"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>
