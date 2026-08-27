@@ -279,8 +279,18 @@
      ============================================================ */
   function wireCatalogActions() {
     document.addEventListener("click", async (e) => {
+      if (!editOn()) return;
+      // clicking a card's photo is the quickest way to change it
+      if (!e.target.closest("[data-act]")) {
+        const media = e.target.closest(".product-card .product-media");
+        if (media && !e.target.closest("[data-img],[contenteditable],button,.product-tag")) {
+          e.preventDefault();
+          openImageDialogFor(media.closest(".product-card").dataset.id);
+        }
+        return;
+      }
       const trigger = e.target.closest("[data-act]");
-      if (!trigger || !editOn()) return;
+      if (!trigger) return;
       if (trigger.closest("dialog")) return; // dialogs wire their own buttons
       const act = trigger.dataset.act;
       const id = trigger.dataset.id;
@@ -429,10 +439,7 @@
       // blur it again immediately. Swallow only that echo (never a real blur), so
       // what the admin typed stays put and still saves on the next blur.
       if (!el.isConnected) return;
-      if (el.dataset.restoredAt && Date.now() - Number(el.dataset.restoredAt) < 500) {
-        delete el.dataset.restoredAt;
-        return;
-      }
+      if (el.dataset.restored) return; // echo blur from the repaint, not the admin leaving the field
       const before = (el.dataset.before || "").replace(/\s+/g, " ").trim();
       const next = (el.textContent || "").replace(/\s+/g, " ").trim();
       if (el._unlock) {

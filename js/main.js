@@ -122,10 +122,12 @@ const WHATSAPP_NUMBER = "254742005725"; // shop line, also used for order messag
     // keep the "don't disturb me" lock alive on the fresh node
     el._unlock = typing.unlock || null;
     el.dataset.before = typing.before == null ? "" : typing.before;
+    // focus() on the replacement node makes the browser blur the old one; mark the
+    // node so that echo blur is ignored (cleared in a microtask, before any real blur)
     el.dataset.restored = "1";
-    el.dataset.restoredAt = String(Date.now());
     el.focus();
     setCaret(el, typing.caret);
+    (global.queueMicrotask || ((fn) => Promise.resolve().then(fn)))(() => delete el.dataset.restored);
   }
 
   /* Repaints are postponed while the admin types inside a field, but never for

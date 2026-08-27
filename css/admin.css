@@ -6,6 +6,9 @@
 
 [hidden] { display: none !important; }
 
+/* keep anchor targets clear of the sticky admin bar */
+body.has-admin-bar section[id] { scroll-margin-top: 132px; }
+
 :root {
   --admin-ink: #14161a;
   --admin-ink-2: #1f232b;
@@ -263,6 +266,11 @@ body.admin-edit .product-card { position: relative; cursor: default; }
 body.admin-edit .product-card:hover { transform: none; box-shadow: var(--shadow-sm); }
 body.admin-edit .product-card:hover .product-media img { transform: none; }
 body.admin-edit .product-card { border-style: dashed; border-color: #e6d5d8; }
+body.admin-edit .product-media { cursor: zoom-in; }
+body.admin-edit .product-media img { pointer-events: none; }
+body.admin-edit .product-media .pc-admin,
+body.admin-edit .product-media .product-tag,
+body.admin-edit .pc-admin { pointer-events: auto; }
 
 .pmedia__empty {
   aspect-ratio: 1 / 1;
