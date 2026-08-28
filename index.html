@@ -225,13 +225,17 @@
           <p>Tap a category to browse — add items to your cart or order directly on WhatsApp.</p>
         </div>
 
-        <div class="filter-bar" id="filterBar">
-          <button class="filter-btn active" data-filter="all">All Items</button>
-          <button class="filter-btn" data-filter="appliances">🍳 Kitchen Appliances</button>
-          <button class="filter-btn" data-filter="flasks">🧴 Flasks &amp; Thermos</button>
-          <button class="filter-btn" data-filter="dining">🍽️ Dining</button>
-          <button class="filter-btn" data-filter="cookware">🥘 Cookware</button>
+        <div class="admin-toolbar" id="adminToolbar" hidden>
+          <span class="admin-toolbar-label">🔧 Admin mode</span>
+          <div class="admin-toolbar-actions">
+            <button class="btn btn-outline btn-sm" type="button" id="addCategoryBtn">+ Category</button>
+            <button class="btn btn-primary btn-sm" type="button" id="addProductBtn">+ Product</button>
+            <button class="btn-text" type="button" id="manageCatalogueBtn">Manage all</button>
+            <button class="btn-text" type="button" id="logoutBtn">Sign out</button>
+          </div>
         </div>
+
+        <div class="filter-bar" id="filterBar"><!-- injected by JS --></div>
 
         <div class="products-grid" id="productsGrid"><!-- injected by JS --></div>
       </div>
@@ -544,17 +548,69 @@
     </form>
   </dialog>
 
-  <section class="admin-panel" id="adminPanel" hidden>
-    <div class="container">
-      <div class="admin-panel-head"><div><span class="section-tag">Admin dashboard</span><h2>Manage catalogue</h2></div><button class="btn btn-outline btn-sm" id="logoutBtn">Sign out</button></div>
-      <div class="admin-columns">
-        <form class="admin-card" id="categoryForm"><h3 id="categoryFormTitle">Add category</h3><input type="hidden" id="categoryId" /><label>Name<input id="categoryName" required /></label><label>Slug<input id="categorySlug" required pattern="[a-z0-9-]+" /></label><label>Emoji<input id="categoryEmoji" maxlength="4" /></label><button class="btn btn-primary" type="submit">Save category</button><button class="btn-text" type="button" id="cancelCategory">Cancel edit</button></form>
-        <form class="admin-card" id="productForm"><h3 id="productFormTitle">Add product</h3><input type="hidden" id="productId" /><label>Name<input id="productName" required /></label><label>Category<select id="productCategory" required></select></label><label>Price (KES)<input id="productPrice" type="number" min="0" step="0.01" required /></label><label>Image URL<input id="productImage" placeholder="images/product.jpg" required /></label><label>Tag<input id="productTag" placeholder="Best Seller" /></label><label>Description<textarea id="productDescription" rows="3"></textarea></label><button class="btn btn-primary" type="submit">Save product</button><button class="btn-text" type="button" id="cancelProduct">Cancel edit</button></form>
+  <!-- ===== Add/Edit category ===== -->
+  <dialog class="admin-dialog" id="categoryDialog">
+    <form class="admin-form" id="categoryForm">
+      <button class="dialog-close" id="categoryDialogClose" type="button" aria-label="Close">&times;</button>
+      <span class="section-tag">Category</span>
+      <h2 id="categoryFormTitle">Add category</h2>
+      <input type="hidden" id="categoryId" />
+      <label>Name<input id="categoryName" required /></label>
+      <label>Slug<input id="categorySlug" required pattern="[a-z0-9-]+" placeholder="e.g. cookware" /></label>
+      <label>Emoji<input id="categoryEmoji" maxlength="4" placeholder="🥘" /></label>
+      <div class="admin-dialog-actions">
+        <button class="btn btn-primary" type="submit">Save category</button>
+        <button class="btn-text admin-delete-link" type="button" id="deleteCategoryBtn" hidden>Delete category</button>
       </div>
-      <div class="admin-card admin-table-wrap"><h3>Categories</h3><div id="categoryRows"></div></div>
-      <div class="admin-card admin-table-wrap"><h3>Products</h3><div id="productRows"></div></div>
+      <p class="admin-error" id="categoryError" role="alert"></p>
+    </form>
+  </dialog>
+
+  <!-- ===== Add/Edit product ===== -->
+  <dialog class="admin-dialog admin-dialog-lg" id="productDialog">
+    <form class="admin-form" id="productForm">
+      <button class="dialog-close" id="productDialogClose" type="button" aria-label="Close">&times;</button>
+      <span class="section-tag">Product</span>
+      <h2 id="productFormTitle">Add product</h2>
+      <input type="hidden" id="productId" />
+      <input type="hidden" id="productExistingImage" />
+      <label>Name<input id="productName" required /></label>
+      <label>Category<select id="productCategory" required></select></label>
+      <label>Price (KES)<input id="productPrice" type="number" min="0" step="0.01" required /></label>
+      <label>Tag (optional)<input id="productTag" placeholder="Best Seller" /></label>
+      <label>Description<textarea id="productDescription" rows="3"></textarea></label>
+      <label>Photo
+        <div class="image-upload">
+          <img id="productImagePreview" class="image-upload-preview" alt="Product photo preview" hidden />
+          <p class="image-upload-empty" id="productImageEmpty">No photo yet</p>
+          <div class="image-upload-actions">
+            <input type="file" id="productImageFile" accept="image/*" />
+            <button class="btn-text admin-delete-link" type="button" id="removeProductImageBtn" hidden>Remove photo</button>
+          </div>
+        </div>
+      </label>
+      <div class="admin-dialog-actions">
+        <button class="btn btn-primary" type="submit" id="productSaveBtn">Save product</button>
+        <button class="btn-text admin-delete-link" type="button" id="deleteProductBtn" hidden>Delete product</button>
+      </div>
+      <p class="admin-error" id="productError" role="alert"></p>
+    </form>
+  </dialog>
+
+  <!-- ===== Manage catalogue overview ===== -->
+  <dialog class="admin-dialog admin-dialog-lg" id="manageDialog">
+    <div class="admin-form">
+      <button class="dialog-close" id="manageDialogClose" type="button" aria-label="Close">&times;</button>
+      <span class="section-tag">Catalogue</span>
+      <h2>Manage categories &amp; products</h2>
+      <p class="admin-help">Expand a category to see its products. Use the dropdown on any product to move it to a different category, or edit/delete it directly.</p>
+      <div class="manage-toolbar">
+        <button class="btn btn-outline btn-sm" type="button" id="manageAddCategoryBtn">+ Category</button>
+        <button class="btn btn-primary btn-sm" type="button" id="manageAddProductBtn">+ Product</button>
+      </div>
+      <div class="manage-list" id="manageList"><!-- injected by JS --></div>
     </div>
-  </section>
+  </dialog>
 
   <!-- ===== Toast ===== -->
   <div class="toast" id="toast"></div>

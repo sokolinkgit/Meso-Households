@@ -57,6 +57,35 @@ create policy "Admins manage products" on public.products for all to authenticat
 drop policy if exists "Admins can read own admin record" on public.admin_users;
 create policy "Admins can read own admin record" on public.admin_users for select to authenticated using (user_id = auth.uid());
 
+-- ---------------------------------------------------------------------------
+-- Storage: a public bucket for product photos, uploaded from the browser.
+-- Anyone can view images; only admins (checked via is_admin()) can upload,
+-- replace, or delete them.
+-- ---------------------------------------------------------------------------
+insert into storage.buckets (id, name, public)
+values ('product-images', 'product-images', true)
+on conflict (id) do nothing;
+
+drop policy if exists "Public can view product images" on storage.objects;
+create policy "Public can view product images" on storage.objects
+  for select using (bucket_id = 'product-images');
+
+drop policy if exists "Admins can upload product images" on storage.objects;
+create policy "Admins can upload product images" on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'product-images' and public.is_admin());
+
+drop policy if exists "Admins can update product images" on storage.objects;
+create policy "Admins can update product images" on storage.objects
+  for update to authenticated
+  using (bucket_id = 'product-images' and public.is_admin())
+  with check (bucket_id = 'product-images' and public.is_admin());
+
+drop policy if exists "Admins can delete product images" on storage.objects;
+create policy "Admins can delete product images" on storage.objects
+  for delete to authenticated
+  using (bucket_id = 'product-images' and public.is_admin());
+
 insert into public.categories (slug, name, emoji, sort_order) values
   ('appliances', 'Kitchen Appliances', '🍳', 1),
   ('flasks', 'Flasks & Thermos', '🧴', 2),
