@@ -5,6 +5,7 @@
 
 const SHOP_PHONE_DISPLAY = "0742 005 725";
 const WHATSAPP_NUMBER = "254742005725";
+const PRODUCT_IMAGE_BUCKET = "product-images";
 const supabaseClient = window.supabase?.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
 let CATEGORIES = [
   { id: "appliances", slug: "appliances", name: "Kitchen Appliances", emoji: "🍳" },
@@ -143,17 +144,28 @@ function renderProducts(filter = "all") {
         `Thank you!`
     );
     const card = document.createElement("article");
-    card.className = "product-card";
+    card.className = "product-card" + (isAdmin ? " is-admin" : "");
     card.style.animationDelay = i * 0.06 + "s";
     card.innerHTML = `
       <div class="product-media">
         <img src="${p.image}" alt="${p.name}" loading="lazy" />
         ${p.tag ? `<span class="product-tag ${p.tag === "Hot" ? "hot" : ""}">${p.tag}</span>` : ""}
+        ${isAdmin ? `
+          <div class="admin-overlay">
+            <button class="admin-overlay-btn edit-product-quick" data-id="${p.id}" type="button" aria-label="Edit ${escapeHtml(p.name)}" title="Edit">✎</button>
+            <button class="admin-overlay-btn delete-product-quick" data-id="${p.id}" type="button" aria-label="Delete ${escapeHtml(p.name)}" title="Delete">🗑</button>
+          </div>` : ""}
       </div>
       <div class="product-body">
         <span class="product-cat">${escapeHtml(categoryLabel(p.category))}</span>
         <h3>${escapeHtml(p.name)}</h3>
         <p class="product-desc">${escapeHtml(p.desc)}</p>
+        ${isAdmin ? `
+          <label class="admin-quick-move">Move to category
+            <select class="quick-category-select" data-id="${p.id}">
+              ${CATEGORIES.map((c) => `<option value="${escapeHtml(c.slug)}" ${c.slug === p.category ? "selected" : ""}>${escapeHtml(c.name)}</option>`).join("")}
+            </select>
+          </label>` : ""}
         <div class="product-foot">
           <span class="product-price">${formatKES(p.price)}</span>
           <button class="add-btn" data-id="${p.id}" aria-label="Add ${p.name} to cart">
@@ -168,12 +180,25 @@ function renderProducts(filter = "all") {
       </div>`;
     productsGrid.appendChild(card);
   });
+
+  if (isAdmin) {
+    const addCard = document.createElement("button");
+    addCard.type = "button";
+    addCard.id = "addProductGhostCard";
+    addCard.className = "product-card add-product-card";
+    addCard.innerHTML = `<span class="add-product-plus">+</span><span>Add product${filter !== "all" ? ` to ${escapeHtml(categoryLabel(filter))}` : ""}</span>`;
+    productsGrid.appendChild(addCard);
+  }
 }
 
 /* ---------- Filters ---------- */
 const filterBar = $("#filterBar");
 filterBar.addEventListener("click", (e) => {
+  const editBtn = e.target.closest(".filter-chip-edit");
+  const addBtn = e.target.closest("#addCategoryChipBtn");
   const btn = e.target.closest(".filter-btn");
+  if (editBtn) return openCategoryDialog(CATEGORIES.find((c) => String(c.id) === String(editBtn.dataset.id)));
+  if (addBtn) return openCategoryDialog();
   if (!btn) return;
   $$(".filter-btn").forEach((b) => b.classList.remove("active"));
   btn.classList.add("active");
@@ -279,7 +304,17 @@ function closeCart() {
 
 productsGrid.addEventListener("click", (e) => {
   const btn = e.target.closest(".add-btn");
+  const edit = e.target.closest(".edit-product-quick");
+  const del = e.target.closest(".delete-product-quick");
+  const addGhost = e.target.closest("#addProductGhostCard");
   if (btn) addToCart(btn.dataset.id);
+  if (edit) openProductDialog(PRODUCTS.find((p) => String(p.id) === String(edit.dataset.id)));
+  if (del) deleteProductQuick(del.dataset.id);
+  if (addGhost) openProductDialog();
+});
+productsGrid.addEventListener("change", (e) => {
+  const sel = e.target.closest(".quick-category-select");
+  if (sel) moveProductToCategory(sel.dataset.id, sel.value);
 });
 
 cartItems.addEventListener("click", (e) => {
@@ -436,28 +471,295 @@ async function loadCatalogue() {
   if (!productError && rows?.length) PRODUCTS = rows.map((p) => ({ id: p.id, name: p.name, category: p.categories?.slug, categoryLabel: p.categories?.name, price: Number(p.price), image: p.image_url, tag: p.tag, desc: p.description }));
   renderFilterBar();
   renderProducts($(".filter-btn.active")?.dataset.filter || "all");
+  if ($("#manageDialog").open) renderManageList();
 }
+
 function renderFilterBar() {
-  filterBar.innerHTML = `<button class="filter-btn active" data-filter="all">All Items</button>` + CATEGORIES.map((c) => `<button class="filter-btn" data-filter="${escapeHtml(c.slug)}">${escapeHtml(c.emoji || "")} ${escapeHtml(c.name)}</button>`).join("");
+  const activeSlug = $(".filter-btn.active")?.dataset.filter || "all";
+  filterBar.innerHTML =
+    `<button class="filter-btn ${activeSlug === "all" ? "active" : ""}" data-filter="all">All Items</button>` +
+    CATEGORIES.map(
+      (c) => `
+      <span class="filter-chip-wrap">
+        <button class="filter-btn ${activeSlug === c.slug ? "active" : ""}" data-filter="${escapeHtml(c.slug)}">${escapeHtml(c.emoji || "")} ${escapeHtml(c.name)}</button>
+        ${isAdmin ? `<button class="filter-chip-edit" type="button" data-id="${c.id}" aria-label="Edit ${escapeHtml(c.name)}" title="Edit category">✎</button>` : ""}
+      </span>`
+    ).join("") +
+    (isAdmin ? `<button class="filter-btn filter-btn-add" type="button" id="addCategoryChipBtn">+ Category</button>` : "");
 }
-function renderAdminTables() {
-  $("#categoryRows").innerHTML = CATEGORIES.map((c) => `<div class="admin-row"><span>${escapeHtml(c.emoji || "")} <strong>${escapeHtml(c.name)}</strong> <small>${escapeHtml(c.slug)}</small></span><span><button class="btn-text edit-category" data-id="${c.id}">Edit</button><button class="btn-text delete-category" data-id="${c.id}">Delete</button></span></div>`).join("");
-  $("#productRows").innerHTML = PRODUCTS.map((p) => `<div class="admin-row"><span><strong>${escapeHtml(p.name)}</strong><small>${escapeHtml(categoryLabel(p.category))} · ${formatKES(p.price)}</small></span><span><button class="btn-text edit-product" data-id="${p.id}">Edit</button><button class="btn-text delete-product" data-id="${p.id}">Delete</button></span></div>`).join("");
-  $("#productCategory").innerHTML = CATEGORIES.map((c) => `<option value="${escapeHtml(c.slug)}">${escapeHtml(c.name)}</option>`).join("");
+
+/* ---------- Admin mode toggle ---------- */
+function applyAdminUI() {
+  document.body.classList.toggle("is-admin", isAdmin);
+  $("#adminToolbar").hidden = !isAdmin;
+  renderFilterBar();
+  renderProducts($(".filter-btn.active")?.dataset.filter || "all");
 }
-function resetForms() { $("#categoryForm").reset(); $("#productForm").reset(); $("#categoryId").value = ""; $("#productId").value = ""; $("#categoryFormTitle").textContent = "Add category"; $("#productFormTitle").textContent = "Add product"; }
-function openAdmin() { $("#adminPanel").hidden = false; renderAdminTables(); $("#adminPanel").scrollIntoView({ behavior: "smooth" }); }
-async function refreshAdmin() { await loadCatalogue(); renderAdminTables(); }
+
+async function refreshAdmin() {
+  await loadCatalogue();
+}
+
 async function checkAdminSession() {
   if (!supabaseClient) return;
   const { data: { session } } = await supabaseClient.auth.getSession();
+  isAdmin = false;
   if (session) {
     const { data } = await supabaseClient.from("admin_users").select("user_id").eq("user_id", session.user.id).maybeSingle();
     isAdmin = !!data;
   }
-  $("#adminPanel").hidden = !isAdmin;
-  if (isAdmin) openAdmin();
+  applyAdminUI();
 }
+
+/* ---------- Product image uploads (Supabase Storage) ---------- */
+async function uploadProductImage(file) {
+  const extMatch = /\.([a-z0-9]+)$/i.exec(file.name || "");
+  const ext = (extMatch ? extMatch[1] : "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+  const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const { error } = await supabaseClient.storage.from(PRODUCT_IMAGE_BUCKET).upload(path, file, { upsert: true, cacheControl: "3600" });
+  if (error) throw error;
+  const { data } = supabaseClient.storage.from(PRODUCT_IMAGE_BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+}
+async function deleteProductImageByUrl(url) {
+  if (!url) return;
+  const marker = `/object/public/${PRODUCT_IMAGE_BUCKET}/`;
+  const idx = url.indexOf(marker);
+  if (idx === -1) return; // not an uploaded image (e.g. a bundled local placeholder) — leave it alone
+  const path = url.slice(idx + marker.length);
+  try { await supabaseClient.storage.from(PRODUCT_IMAGE_BUCKET).remove([path]); } catch { /* best-effort */ }
+}
+function setProductImagePreview(url) {
+  const img = $("#productImagePreview");
+  const empty = $("#productImageEmpty");
+  const removeBtn = $("#removeProductImageBtn");
+  if (url) { img.src = url; img.hidden = false; empty.hidden = true; removeBtn.hidden = false; }
+  else { img.hidden = true; img.removeAttribute("src"); empty.hidden = false; removeBtn.hidden = true; }
+}
+
+/* ---------- Category dialog ---------- */
+function openCategoryDialog(cat = null) {
+  $("#categoryForm").reset();
+  $("#categoryError").textContent = "";
+  if (cat) {
+    $("#categoryId").value = cat.id;
+    $("#categoryName").value = cat.name;
+    $("#categorySlug").value = cat.slug;
+    $("#categoryEmoji").value = cat.emoji || "";
+    $("#categoryFormTitle").textContent = "Edit category";
+    $("#deleteCategoryBtn").hidden = false;
+  } else {
+    $("#categoryId").value = "";
+    $("#categoryFormTitle").textContent = "Add category";
+    $("#deleteCategoryBtn").hidden = true;
+  }
+  $("#categoryDialog").showModal();
+}
+$("#categoryDialogClose").addEventListener("click", () => $("#categoryDialog").close());
+$("#categoryForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!isAdmin) return;
+  const id = $("#categoryId").value;
+  const payload = { name: $("#categoryName").value.trim(), slug: $("#categorySlug").value.trim().toLowerCase(), emoji: $("#categoryEmoji").value.trim() };
+  const result = id ? await supabaseClient.from("categories").update(payload).eq("id", id) : await supabaseClient.from("categories").insert(payload);
+  if (result.error) return ($("#categoryError").textContent = result.error.message);
+  $("#categoryDialog").close();
+  await refreshAdmin();
+  showToast("Category saved");
+});
+async function deleteCategoryQuick(id) {
+  const cat = CATEGORIES.find((c) => String(c.id) === String(id));
+  if (!confirm(`Delete category "${cat?.name || ""}"? It must have no products left in it.`)) return;
+  const r = await supabaseClient.from("categories").delete().eq("id", id);
+  if (r.error) return showToast(r.error.message);
+  await refreshAdmin();
+  showToast("Category deleted");
+}
+$("#deleteCategoryBtn").addEventListener("click", async () => {
+  const id = $("#categoryId").value;
+  if (!id) return;
+  const cat = CATEGORIES.find((c) => String(c.id) === String(id));
+  if (!confirm(`Delete category "${cat?.name || ""}"? It must have no products left in it.`)) return;
+  const r = await supabaseClient.from("categories").delete().eq("id", id);
+  if (r.error) return ($("#categoryError").textContent = r.error.message);
+  $("#categoryDialog").close();
+  await refreshAdmin();
+  showToast("Category deleted");
+});
+
+/* ---------- Product dialog ---------- */
+let pendingImageFile = null;
+function openProductDialog(product = null) {
+  $("#productForm").reset();
+  $("#productError").textContent = "";
+  $("#productCategory").innerHTML = CATEGORIES.map((c) => `<option value="${escapeHtml(c.slug)}">${escapeHtml(c.name)}</option>`).join("");
+  pendingImageFile = null;
+  if (product) {
+    $("#productId").value = product.id;
+    $("#productExistingImage").value = product.image || "";
+    $("#productName").value = product.name;
+    $("#productCategory").value = product.category;
+    $("#productPrice").value = product.price;
+    $("#productTag").value = product.tag || "";
+    $("#productDescription").value = product.desc || "";
+    $("#productFormTitle").textContent = "Edit product";
+    $("#deleteProductBtn").hidden = false;
+    setProductImagePreview(product.image);
+  } else {
+    $("#productId").value = "";
+    $("#productExistingImage").value = "";
+    $("#productFormTitle").textContent = "Add product";
+    $("#deleteProductBtn").hidden = true;
+    setProductImagePreview("");
+    const activeSlug = $(".filter-btn.active")?.dataset.filter;
+    if (activeSlug && activeSlug !== "all") $("#productCategory").value = activeSlug;
+  }
+  $("#productDialog").showModal();
+}
+$("#productDialogClose").addEventListener("click", () => $("#productDialog").close());
+$("#productImageFile").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  pendingImageFile = file;
+  const reader = new FileReader();
+  reader.onload = () => setProductImagePreview(reader.result);
+  reader.readAsDataURL(file);
+});
+$("#removeProductImageBtn").addEventListener("click", async () => {
+  const existing = $("#productExistingImage").value;
+  if (existing) await deleteProductImageByUrl(existing);
+  $("#productExistingImage").value = "";
+  pendingImageFile = null;
+  $("#productImageFile").value = "";
+  setProductImagePreview("");
+});
+$("#productForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!isAdmin) return;
+  const saveBtn = $("#productSaveBtn");
+  saveBtn.disabled = true;
+  const originalLabel = saveBtn.textContent;
+  saveBtn.textContent = "Saving…";
+  try {
+    const id = $("#productId").value;
+    const category = CATEGORIES.find((c) => c.slug === $("#productCategory").value);
+    if (!category) throw new Error("Please pick a category");
+    let imageUrl = $("#productExistingImage").value;
+    if (pendingImageFile) imageUrl = await uploadProductImage(pendingImageFile);
+    const payload = {
+      name: $("#productName").value.trim(),
+      category_id: category.id,
+      price: Number($("#productPrice").value),
+      image_url: imageUrl || "",
+      tag: $("#productTag").value.trim() || null,
+      description: $("#productDescription").value.trim(),
+    };
+    const result = id ? await supabaseClient.from("products").update(payload).eq("id", id) : await supabaseClient.from("products").insert(payload);
+    if (result.error) throw result.error;
+    $("#productDialog").close();
+    await refreshAdmin();
+    showToast("Product saved");
+  } catch (err) {
+    $("#productError").textContent = err.message || "Something went wrong";
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = originalLabel;
+  }
+});
+async function deleteProductQuick(id) {
+  const product = PRODUCTS.find((p) => String(p.id) === String(id));
+  if (!confirm(`Delete "${product?.name || "this product"}"? This cannot be undone.`)) return;
+  const r = await supabaseClient.from("products").delete().eq("id", id);
+  if (r.error) return showToast(r.error.message);
+  if (product?.image) await deleteProductImageByUrl(product.image);
+  await refreshAdmin();
+  showToast("Product deleted");
+}
+$("#deleteProductBtn").addEventListener("click", async () => {
+  const id = $("#productId").value;
+  if (!id) return;
+  const product = PRODUCTS.find((p) => String(p.id) === String(id));
+  if (!confirm(`Delete "${product?.name || "this product"}"? This cannot be undone.`)) return;
+  const r = await supabaseClient.from("products").delete().eq("id", id);
+  if (r.error) return ($("#productError").textContent = r.error.message);
+  if (product?.image) await deleteProductImageByUrl(product.image);
+  $("#productDialog").close();
+  await refreshAdmin();
+  showToast("Product deleted");
+});
+async function moveProductToCategory(productId, newSlug) {
+  const category = CATEGORIES.find((c) => c.slug === newSlug);
+  if (!category) return;
+  const r = await supabaseClient.from("products").update({ category_id: category.id }).eq("id", productId);
+  if (r.error) return showToast(r.error.message);
+  await refreshAdmin();
+  showToast("Product moved");
+}
+
+/* ---------- Manage-all catalogue overview ---------- */
+function renderManageList() {
+  $("#manageList").innerHTML = CATEGORIES.map((c) => {
+    const items = PRODUCTS.filter((p) => p.category === c.slug);
+    return `
+    <details class="manage-cat-group" open>
+      <summary>
+        <span>${escapeHtml(c.emoji || "")} <strong>${escapeHtml(c.name)}</strong><small>${items.length} product${items.length === 1 ? "" : "s"}</small></span>
+        <span class="manage-cat-actions">
+          <button class="btn-text manage-edit-category" type="button" data-id="${c.id}">Edit</button>
+          <button class="btn-text manage-delete-category" type="button" data-id="${c.id}">Delete</button>
+        </span>
+      </summary>
+      <div class="manage-products">
+        ${
+          items.length
+            ? items
+                .map(
+                  (p) => `
+          <div class="manage-product-row" data-id="${p.id}">
+            <img src="${escapeHtml(p.image || "")}" alt="" />
+            <div class="manage-product-info"><strong>${escapeHtml(p.name)}</strong><small>${formatKES(p.price)}</small></div>
+            <select class="manage-category-select" data-id="${p.id}">
+              ${CATEGORIES.map((cc) => `<option value="${escapeHtml(cc.slug)}" ${cc.slug === p.category ? "selected" : ""}>${escapeHtml(cc.name)}</option>`).join("")}
+            </select>
+            <button class="btn-text manage-edit-product" type="button" data-id="${p.id}">Edit</button>
+            <button class="btn-text manage-delete-product" type="button" data-id="${p.id}">Delete</button>
+          </div>`
+                )
+                .join("")
+            : `<p class="admin-help">No products in this category yet.</p>`
+        }
+      </div>
+    </details>`;
+  }).join("");
+}
+$("#manageDialogClose").addEventListener("click", () => $("#manageDialog").close());
+$("#manageCatalogueBtn").addEventListener("click", () => { renderManageList(); $("#manageDialog").showModal(); });
+$("#manageAddCategoryBtn").addEventListener("click", () => { $("#manageDialog").close(); openCategoryDialog(); });
+$("#manageAddProductBtn").addEventListener("click", () => { $("#manageDialog").close(); openProductDialog(); });
+$("#manageList").addEventListener("click", (e) => {
+  const editCat = e.target.closest(".manage-edit-category");
+  const delCat = e.target.closest(".manage-delete-category");
+  const editProd = e.target.closest(".manage-edit-product");
+  const delProd = e.target.closest(".manage-delete-product");
+  if (editCat) { $("#manageDialog").close(); openCategoryDialog(CATEGORIES.find((c) => String(c.id) === String(editCat.dataset.id))); }
+  if (delCat) deleteCategoryQuick(delCat.dataset.id);
+  if (editProd) { $("#manageDialog").close(); openProductDialog(PRODUCTS.find((p) => String(p.id) === String(editProd.dataset.id))); }
+  if (delProd) deleteProductQuick(delProd.dataset.id);
+});
+$("#manageList").addEventListener("change", (e) => {
+  const sel = e.target.closest(".manage-category-select");
+  if (sel) moveProductToCategory(sel.dataset.id, sel.value);
+});
+
+/* ---------- Admin toolbar + login/logout ---------- */
+$("#addCategoryBtn").addEventListener("click", () => openCategoryDialog());
+$("#addProductBtn").addEventListener("click", () => openProductDialog());
+$("#logoutBtn").addEventListener("click", async () => {
+  await supabaseClient?.auth.signOut();
+  isAdmin = false;
+  applyAdminUI();
+  showToast("Signed out");
+});
 
 $("#homeIcon").addEventListener("click", (event) => {
   const now = Date.now();
@@ -474,14 +776,12 @@ $("#loginForm").addEventListener("submit", async (event) => {
   if (!supabaseClient) return;
   const { error } = await supabaseClient.auth.signInWithPassword({ email: $("#loginEmail").value.trim(), password: $("#loginPassword").value });
   if (error) { $("#loginError").textContent = error.message; return; }
-  $("#loginError").textContent = ""; $("#adminDialog").close(); await checkAdminSession();
-  if (!isAdmin) showToast("Signed in, but this account is not an admin");
+  $("#loginError").textContent = "";
+  $("#adminDialog").close();
+  await checkAdminSession();
+  if (isAdmin) { showToast("Welcome back — admin mode is on"); $("#products").scrollIntoView({ behavior: "smooth" }); }
+  else showToast("Signed in, but this account is not an admin");
 });
-$("#logoutBtn").addEventListener("click", async () => { await supabaseClient?.auth.signOut(); isAdmin = false; $("#adminPanel").hidden = true; renderProducts(); showToast("Signed out"); });
-$("#categoryForm").addEventListener("submit", async (event) => { event.preventDefault(); if (!isAdmin) return; const id = $("#categoryId").value; const payload = { name: $("#categoryName").value.trim(), slug: $("#categorySlug").value.trim().toLowerCase(), emoji: $("#categoryEmoji").value.trim() }; const result = id ? await supabaseClient.from("categories").update(payload).eq("id", id) : await supabaseClient.from("categories").insert(payload); if (result.error) return showToast(result.error.message); resetForms(); await refreshAdmin(); showToast("Category saved"); });
-$("#productForm").addEventListener("submit", async (event) => { event.preventDefault(); if (!isAdmin) return; const id = $("#productId").value; const category = CATEGORIES.find((c) => c.slug === $("#productCategory").value); const payload = { name: $("#productName").value.trim(), category_id: category.id, price: Number($("#productPrice").value), image_url: $("#productImage").value.trim(), tag: $("#productTag").value.trim() || null, description: $("#productDescription").value.trim() }; const result = id ? await supabaseClient.from("products").update(payload).eq("id", id) : await supabaseClient.from("products").insert(payload); if (result.error) return showToast(result.error.message); resetForms(); await refreshAdmin(); showToast("Product saved"); });
-$("#cancelCategory").addEventListener("click", resetForms); $("#cancelProduct").addEventListener("click", resetForms);
-$("#adminPanel").addEventListener("click", async (event) => { const editCat = event.target.closest(".edit-category"); const delCat = event.target.closest(".delete-category"); const edit = event.target.closest(".edit-product"); const del = event.target.closest(".delete-product"); if (editCat) { const c = CATEGORIES.find((x) => String(x.id) === editCat.dataset.id); $("#categoryId").value = c.id; $("#categoryName").value = c.name; $("#categorySlug").value = c.slug; $("#categoryEmoji").value = c.emoji || ""; $("#categoryFormTitle").textContent = "Edit category"; } if (delCat && confirm("Delete this category? It must have no products.")) { const r = await supabaseClient.from("categories").delete().eq("id", delCat.dataset.id); if (r.error) showToast(r.error.message); else await refreshAdmin(); } if (edit) { const p = PRODUCTS.find((x) => String(x.id) === edit.dataset.id); $("#productId").value = p.id; $("#productName").value = p.name; $("#productCategory").value = p.category; $("#productPrice").value = p.price; $("#productImage").value = p.image; $("#productTag").value = p.tag || ""; $("#productDescription").value = p.desc; $("#productFormTitle").textContent = "Edit product"; } if (del && confirm("Delete this product?")) { const r = await supabaseClient.from("products").delete().eq("id", del.dataset.id); if (r.error) showToast(r.error.message); else await refreshAdmin(); } });
 
 /* ---------- Init ---------- */
 $("#year").textContent = new Date().getFullYear();
