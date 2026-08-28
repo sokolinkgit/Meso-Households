@@ -8,10 +8,10 @@ const WHATSAPP_NUMBER = "254742005725";
 const PRODUCT_IMAGE_BUCKET = "product-images";
 const supabaseClient = window.supabase?.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
 let CATEGORIES = [
-  { id: "appliances", slug: "appliances", name: "Kitchen Appliances", emoji: "🍳" },
-  { id: "flasks", slug: "flasks", name: "Flasks & Thermos", emoji: "🧴" },
-  { id: "dining", slug: "dining", name: "Dining", emoji: "🍽️" },
-  { id: "cookware", slug: "cookware", name: "Cookware", emoji: "🥘" },
+  { id: "appliances", slug: "appliances", name: "Kitchen Appliances", emoji: "🍳", image_url: "" },
+  { id: "flasks", slug: "flasks", name: "Flasks & Thermos", emoji: "🧴", image_url: "" },
+  { id: "dining", slug: "dining", name: "Dining", emoji: "🍽️", image_url: "" },
+  { id: "cookware", slug: "cookware", name: "Cookware", emoji: "🥘", image_url: "" },
 ];
 let isAdmin = false;
 
@@ -130,6 +130,23 @@ const productsGrid = $("#productsGrid");
 const escapeHtml = (value = "") => String(value).replace(/[&<>\"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '\"': "&quot;", "'": "&#039;" }[c]));
 function categoryLabel(slug) {
   return CATEGORIES.find((c) => c.slug === slug)?.name || slug;
+}
+function slugify(str) {
+  return (
+    String(str || "")
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-+|-+$)/g, "") || "category"
+  );
+}
+function categoryChipIcon(cat) {
+  if (cat?.image_url) return `<img class="filter-chip-img" src="${escapeHtml(cat.image_url)}" alt="" />`;
+  return cat?.emoji ? `${escapeHtml(cat.emoji)} ` : "";
+}
+function productImages(p) {
+  if (p?.images && p.images.length) return p.images;
+  return p?.image ? [p.image] : [];
 }
 
 function renderProducts(filter = "all") {
@@ -468,7 +485,7 @@ async function loadCatalogue() {
     supabaseClient.from("products").select("*, categories(slug, name)").order("sort_order"),
   ]);
   if (!catError && cats?.length) CATEGORIES = cats;
-  if (!productError && rows?.length) PRODUCTS = rows.map((p) => ({ id: p.id, name: p.name, category: p.categories?.slug, categoryLabel: p.categories?.name, price: Number(p.price), image: p.image_url, tag: p.tag, desc: p.description }));
+  if (!productError && rows?.length) PRODUCTS = rows.map((p) => ({ id: p.id, name: p.name, category: p.categories?.slug, categoryLabel: p.categories?.name, price: Number(p.price), image: p.image_url, images: p.images || [], tag: p.tag, desc: p.description }));
   renderFilterBar();
   renderProducts($(".filter-btn.active")?.dataset.filter || "all");
   if ($("#manageDialog").open) renderManageList();
@@ -481,7 +498,7 @@ function renderFilterBar() {
     CATEGORIES.map(
       (c) => `
       <span class="filter-chip-wrap">
-        <button class="filter-btn ${activeSlug === c.slug ? "active" : ""}" data-filter="${escapeHtml(c.slug)}">${escapeHtml(c.emoji || "")} ${escapeHtml(c.name)}</button>
+        <button class="filter-btn ${activeSlug === c.slug ? "active" : ""}" data-filter="${escapeHtml(c.slug)}">${categoryChipIcon(c)}${escapeHtml(c.name)}</button>
         ${isAdmin ? `<button class="filter-chip-edit" type="button" data-id="${c.id}" aria-label="Edit ${escapeHtml(c.name)}" title="Edit category">✎</button>` : ""}
       </span>`
     ).join("") +
@@ -500,9 +517,13 @@ async function refreshAdmin() {
   await loadCatalogue();
 }
 
-async function checkAdminSession() {
+async function checkAdminSession(sessionArg) {
   if (!supabaseClient) return;
-  const { data: { session } } = await supabaseClient.auth.getSession();
+  let session = sessionArg;
+  if (session === undefined) {
+    const { data } = await supabaseClient.auth.getSession();
+    session = data.session;
+  }
   isAdmin = false;
   if (session) {
     const { data } = await supabaseClient.from("admin_users").select("user_id").eq("user_id", session.user.id).maybeSingle();
@@ -511,8 +532,8 @@ async function checkAdminSession() {
   applyAdminUI();
 }
 
-/* ---------- Product image uploads (Supabase Storage) ---------- */
-async function uploadProductImage(file) {
+/* ---------- Image uploads (Supabase Storage) — used for both product photos and category images ---------- */
+async function uploadImage(file) {
   const extMatch = /\.([a-z0-9]+)$/i.exec(file.name || "");
   const ext = (extMatch ? extMatch[1] : "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
   const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
@@ -521,7 +542,7 @@ async function uploadProductImage(file) {
   const { data } = supabaseClient.storage.from(PRODUCT_IMAGE_BUCKET).getPublicUrl(path);
   return data.publicUrl;
 }
-async function deleteProductImageByUrl(url) {
+async function deleteUploadedImage(url) {
   if (!url) return;
   const marker = `/object/public/${PRODUCT_IMAGE_BUCKET}/`;
   const idx = url.indexOf(marker);
@@ -529,49 +550,102 @@ async function deleteProductImageByUrl(url) {
   const path = url.slice(idx + marker.length);
   try { await supabaseClient.storage.from(PRODUCT_IMAGE_BUCKET).remove([path]); } catch { /* best-effort */ }
 }
-function setProductImagePreview(url) {
-  const img = $("#productImagePreview");
-  const empty = $("#productImageEmpty");
-  const removeBtn = $("#removeProductImageBtn");
+
+/* ---------- Category dialog ---------- */
+let categoryReturnToProduct = false;
+let pendingCategoryImageFile = null;
+function setCategoryImagePreview(url) {
+  const img = $("#categoryImagePreview");
+  const empty = $("#categoryImageEmpty");
+  const removeBtn = $("#removeCategoryImageBtn");
   if (url) { img.src = url; img.hidden = false; empty.hidden = true; removeBtn.hidden = false; }
   else { img.hidden = true; img.removeAttribute("src"); empty.hidden = false; removeBtn.hidden = true; }
 }
-
-/* ---------- Category dialog ---------- */
 function openCategoryDialog(cat = null) {
   $("#categoryForm").reset();
   $("#categoryError").textContent = "";
+  pendingCategoryImageFile = null;
   if (cat) {
     $("#categoryId").value = cat.id;
+    $("#categoryExistingImage").value = cat.image_url || "";
     $("#categoryName").value = cat.name;
-    $("#categorySlug").value = cat.slug;
-    $("#categoryEmoji").value = cat.emoji || "";
     $("#categoryFormTitle").textContent = "Edit category";
     $("#deleteCategoryBtn").hidden = false;
+    setCategoryImagePreview(cat.image_url || "");
   } else {
     $("#categoryId").value = "";
+    $("#categoryExistingImage").value = "";
     $("#categoryFormTitle").textContent = "Add category";
     $("#deleteCategoryBtn").hidden = true;
+    setCategoryImagePreview("");
   }
   $("#categoryDialog").showModal();
 }
-$("#categoryDialogClose").addEventListener("click", () => $("#categoryDialog").close());
+$("#categoryDialogClose").addEventListener("click", () => { categoryReturnToProduct = false; $("#categoryDialog").close(); });
+$("#categoryImageFile").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  pendingCategoryImageFile = file;
+  const reader = new FileReader();
+  reader.onload = () => setCategoryImagePreview(reader.result);
+  reader.readAsDataURL(file);
+});
+$("#removeCategoryImageBtn").addEventListener("click", () => {
+  $("#categoryExistingImage").value = "";
+  pendingCategoryImageFile = null;
+  $("#categoryImageFile").value = "";
+  setCategoryImagePreview("");
+});
+async function saveCategoryRow(id, baseSlug, rest) {
+  let attempt = 0;
+  let slug = baseSlug;
+  while (true) {
+    const body = { ...rest, slug };
+    const result = id
+      ? await supabaseClient.from("categories").update(body).eq("id", id).select().single()
+      : await supabaseClient.from("categories").insert(body).select().single();
+    if (!result.error || result.error.code !== "23505" || attempt >= 4) return result;
+    attempt += 1;
+    slug = `${baseSlug}-${attempt}`;
+  }
+}
 $("#categoryForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   if (!isAdmin) return;
-  const id = $("#categoryId").value;
-  const payload = { name: $("#categoryName").value.trim(), slug: $("#categorySlug").value.trim().toLowerCase(), emoji: $("#categoryEmoji").value.trim() };
-  const result = id ? await supabaseClient.from("categories").update(payload).eq("id", id) : await supabaseClient.from("categories").insert(payload);
-  if (result.error) return ($("#categoryError").textContent = result.error.message);
-  $("#categoryDialog").close();
-  await refreshAdmin();
-  showToast("Category saved");
+  const saveBtn = event.submitter || $("#categoryForm button[type=submit]");
+  const originalLabel = saveBtn.textContent;
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Saving…";
+  try {
+    const id = $("#categoryId").value;
+    const oldImage = $("#categoryExistingImage").value;
+    let imageUrl = oldImage;
+    if (pendingCategoryImageFile) imageUrl = await uploadImage(pendingCategoryImageFile);
+    const name = $("#categoryName").value.trim();
+    const result = await saveCategoryRow(id || null, slugify(name), { name, image_url: imageUrl || "" });
+    if (result.error) throw result.error;
+    if (pendingCategoryImageFile && oldImage) await deleteUploadedImage(oldImage);
+    $("#categoryDialog").close();
+    await refreshAdmin();
+    if (categoryReturnToProduct && $("#productDialog").open) {
+      populateProductCategorySelect();
+      $("#productCategory").value = result.data.slug;
+    }
+    showToast("Category saved");
+  } catch (err) {
+    $("#categoryError").textContent = err.message || "Something went wrong";
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = originalLabel;
+    categoryReturnToProduct = false;
+  }
 });
 async function deleteCategoryQuick(id) {
   const cat = CATEGORIES.find((c) => String(c.id) === String(id));
   if (!confirm(`Delete category "${cat?.name || ""}"? It must have no products left in it.`)) return;
   const r = await supabaseClient.from("categories").delete().eq("id", id);
   if (r.error) return showToast(r.error.message);
+  if (cat?.image_url) await deleteUploadedImage(cat.image_url);
   await refreshAdmin();
   showToast("Category deleted");
 }
@@ -582,19 +656,59 @@ $("#deleteCategoryBtn").addEventListener("click", async () => {
   if (!confirm(`Delete category "${cat?.name || ""}"? It must have no products left in it.`)) return;
   const r = await supabaseClient.from("categories").delete().eq("id", id);
   if (r.error) return ($("#categoryError").textContent = r.error.message);
+  if (cat?.image_url) await deleteUploadedImage(cat.image_url);
   $("#categoryDialog").close();
   await refreshAdmin();
   showToast("Category deleted");
 });
 
 /* ---------- Product dialog ---------- */
-let pendingImageFile = null;
+let productPhotos = []; // ordered list of { url, file } — url is a preview (existing URL or data: preview), file is set for new/unsaved uploads
+function populateProductCategorySelect() {
+  const current = $("#productCategory").value;
+  $("#productCategory").innerHTML = CATEGORIES.map((c) => `<option value="${escapeHtml(c.slug)}">${escapeHtml(c.name)}</option>`).join("");
+  if (current && CATEGORIES.some((c) => c.slug === current)) $("#productCategory").value = current;
+}
+function renderProductPhotoGallery() {
+  const gallery = $("#productPhotoGallery");
+  const empty = $("#productImageEmpty");
+  empty.hidden = productPhotos.length > 0;
+  gallery.innerHTML = productPhotos
+    .map(
+      (p, i) => `
+    <div class="photo-thumb${i === 0 ? " is-cover" : ""}" data-index="${i}">
+      <img src="${p.url}" alt="Product photo ${i + 1}" />
+      ${i === 0 ? `<span class="photo-thumb-cover-tag">Cover</span>` : ""}
+      <button type="button" class="photo-thumb-remove" data-index="${i}" aria-label="Remove photo ${i + 1}" title="Remove">&times;</button>
+    </div>`
+    )
+    .join("");
+}
+$("#productPhotoGallery").addEventListener("click", async (e) => {
+  const removeBtn = e.target.closest(".photo-thumb-remove");
+  const thumb = e.target.closest(".photo-thumb");
+  if (removeBtn) {
+    const i = Number(removeBtn.dataset.index);
+    const [removed] = productPhotos.splice(i, 1);
+    if (removed && !removed.file) await deleteUploadedImage(removed.url);
+    renderProductPhotoGallery();
+    return;
+  }
+  if (thumb) {
+    const i = Number(thumb.dataset.index);
+    if (i > 0) {
+      const [chosen] = productPhotos.splice(i, 1);
+      productPhotos.unshift(chosen);
+      renderProductPhotoGallery();
+    }
+  }
+});
 function openProductDialog(product = null) {
   $("#productForm").reset();
   $("#productError").textContent = "";
-  $("#productCategory").innerHTML = CATEGORIES.map((c) => `<option value="${escapeHtml(c.slug)}">${escapeHtml(c.name)}</option>`).join("");
-  pendingImageFile = null;
+  populateProductCategorySelect();
   if (product) {
+    productPhotos = productImages(product).map((url) => ({ url, file: null }));
     $("#productId").value = product.id;
     $("#productExistingImage").value = product.image || "";
     $("#productName").value = product.name;
@@ -604,34 +718,41 @@ function openProductDialog(product = null) {
     $("#productDescription").value = product.desc || "";
     $("#productFormTitle").textContent = "Edit product";
     $("#deleteProductBtn").hidden = false;
-    setProductImagePreview(product.image);
   } else {
+    productPhotos = [];
     $("#productId").value = "";
     $("#productExistingImage").value = "";
     $("#productFormTitle").textContent = "Add product";
     $("#deleteProductBtn").hidden = true;
-    setProductImagePreview("");
     const activeSlug = $(".filter-btn.active")?.dataset.filter;
     if (activeSlug && activeSlug !== "all") $("#productCategory").value = activeSlug;
   }
+  renderProductPhotoGallery();
   $("#productDialog").showModal();
 }
 $("#productDialogClose").addEventListener("click", () => $("#productDialog").close());
-$("#productImageFile").addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  pendingImageFile = file;
-  const reader = new FileReader();
-  reader.onload = () => setProductImagePreview(reader.result);
-  reader.readAsDataURL(file);
+$("#productCategoryAddBtn").addEventListener("click", () => {
+  categoryReturnToProduct = true;
+  openCategoryDialog();
 });
-$("#removeProductImageBtn").addEventListener("click", async () => {
-  const existing = $("#productExistingImage").value;
-  if (existing) await deleteProductImageByUrl(existing);
-  $("#productExistingImage").value = "";
-  pendingImageFile = null;
-  $("#productImageFile").value = "";
-  setProductImagePreview("");
+$("#productCategoryEditBtn").addEventListener("click", () => {
+  const cat = CATEGORIES.find((c) => c.slug === $("#productCategory").value);
+  if (!cat) return showToast("Pick a category first");
+  categoryReturnToProduct = true;
+  openCategoryDialog(cat);
+});
+$("#productImageFile").addEventListener("change", (e) => {
+  const files = [...e.target.files];
+  if (!files.length) return;
+  files.forEach((file) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      productPhotos.push({ url: reader.result, file });
+      renderProductPhotoGallery();
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = "";
 });
 $("#productForm").addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -644,13 +765,14 @@ $("#productForm").addEventListener("submit", async (event) => {
     const id = $("#productId").value;
     const category = CATEGORIES.find((c) => c.slug === $("#productCategory").value);
     if (!category) throw new Error("Please pick a category");
-    let imageUrl = $("#productExistingImage").value;
-    if (pendingImageFile) imageUrl = await uploadProductImage(pendingImageFile);
+    const images = [];
+    for (const p of productPhotos) images.push(p.file ? await uploadImage(p.file) : p.url);
     const payload = {
       name: $("#productName").value.trim(),
       category_id: category.id,
       price: Number($("#productPrice").value),
-      image_url: imageUrl || "",
+      image_url: images[0] || "",
+      images,
       tag: $("#productTag").value.trim() || null,
       description: $("#productDescription").value.trim(),
     };
@@ -666,12 +788,16 @@ $("#productForm").addEventListener("submit", async (event) => {
     saveBtn.textContent = originalLabel;
   }
 });
+async function deleteAllProductImages(product) {
+  const urls = productImages(product);
+  for (const url of urls) await deleteUploadedImage(url);
+}
 async function deleteProductQuick(id) {
   const product = PRODUCTS.find((p) => String(p.id) === String(id));
   if (!confirm(`Delete "${product?.name || "this product"}"? This cannot be undone.`)) return;
   const r = await supabaseClient.from("products").delete().eq("id", id);
   if (r.error) return showToast(r.error.message);
-  if (product?.image) await deleteProductImageByUrl(product.image);
+  if (product) await deleteAllProductImages(product);
   await refreshAdmin();
   showToast("Product deleted");
 }
@@ -682,7 +808,7 @@ $("#deleteProductBtn").addEventListener("click", async () => {
   if (!confirm(`Delete "${product?.name || "this product"}"? This cannot be undone.`)) return;
   const r = await supabaseClient.from("products").delete().eq("id", id);
   if (r.error) return ($("#productError").textContent = r.error.message);
-  if (product?.image) await deleteProductImageByUrl(product.image);
+  if (product) await deleteAllProductImages(product);
   $("#productDialog").close();
   await refreshAdmin();
   showToast("Product deleted");
@@ -703,7 +829,7 @@ function renderManageList() {
     return `
     <details class="manage-cat-group" open>
       <summary>
-        <span>${escapeHtml(c.emoji || "")} <strong>${escapeHtml(c.name)}</strong><small>${items.length} product${items.length === 1 ? "" : "s"}</small></span>
+        <span>${c.image_url ? `<img class="manage-cat-thumb" src="${escapeHtml(c.image_url)}" alt="" />` : escapeHtml(c.emoji || "") + " "}<strong>${escapeHtml(c.name)}</strong><small>${items.length} product${items.length === 1 ? "" : "s"}</small></span>
         <span class="manage-cat-actions">
           <button class="btn-text manage-edit-category" type="button" data-id="${c.id}">Edit</button>
           <button class="btn-text manage-delete-category" type="button" data-id="${c.id}">Delete</button>
@@ -755,10 +881,13 @@ $("#manageList").addEventListener("change", (e) => {
 $("#addCategoryBtn").addEventListener("click", () => openCategoryDialog());
 $("#addProductBtn").addEventListener("click", () => openProductDialog());
 $("#logoutBtn").addEventListener("click", async () => {
-  await supabaseClient?.auth.signOut();
+  // Flip the UI back to visitor mode right away — don't wait on the network
+  // round-trip, so the admin toolbar disappears instantly instead of needing
+  // a manual page refresh.
   isAdmin = false;
   applyAdminUI();
   showToast("Signed out");
+  await supabaseClient?.auth.signOut();
 });
 
 $("#homeIcon").addEventListener("click", (event) => {
@@ -774,11 +903,20 @@ $("#loginClose").addEventListener("click", () => $("#adminDialog").close());
 $("#loginForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   if (!supabaseClient) return;
-  const { error } = await supabaseClient.auth.signInWithPassword({ email: $("#loginEmail").value.trim(), password: $("#loginPassword").value });
+  const submitBtn = event.submitter || $("#loginForm button[type=submit]");
+  const originalLabel = submitBtn.textContent;
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Signing in…";
+  // Use the session returned directly by signInWithPassword instead of a
+  // separate getSession() round-trip — this is what makes sign-in feel
+  // instant instead of waiting on a second network call.
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email: $("#loginEmail").value.trim(), password: $("#loginPassword").value });
+  submitBtn.disabled = false;
+  submitBtn.textContent = originalLabel;
   if (error) { $("#loginError").textContent = error.message; return; }
   $("#loginError").textContent = "";
   $("#adminDialog").close();
-  await checkAdminSession();
+  await checkAdminSession(data.session);
   if (isAdmin) { showToast("Welcome back — admin mode is on"); $("#products").scrollIntoView({ behavior: "smooth" }); }
   else showToast("Signed in, but this account is not an admin");
 });
@@ -790,4 +928,14 @@ renderProducts();
 renderCart();
 loadCatalogue();
 checkAdminSession();
-if (supabaseClient) supabaseClient.auth.onAuthStateChange(() => checkAdminSession());
+// React to the event/session Supabase gives us directly rather than
+// re-querying getSession() (which can race with an in-flight sign-out and
+// leave the UI showing stale admin state until a manual refresh).
+if (supabaseClient) {
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (event === "SIGNED_OUT") { isAdmin = false; applyAdminUI(); return; }
+    if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION" || event === "USER_UPDATED") {
+      checkAdminSession(session);
+    }
+  });
+}
