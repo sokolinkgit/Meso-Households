@@ -129,7 +129,7 @@
 /* ---------- "Add product" ghost card at the end of the grid ---------- */
 .add-product-card {
   border: 2px dashed var(--primary-light);
-  background: var(--cream);
+  background: var(--white);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -147,7 +147,7 @@
 /* ---------- "Manage all" catalogue overview modal ---------- */
 .manage-toolbar { display: flex; gap: 10px; margin: 4px 0 6px; }
 .manage-list { max-height: 55vh; overflow-y: auto; display: grid; gap: 10px; padding-right: 4px; margin-top: 4px; }
-.manage-cat-group { border: 1px solid var(--border); border-radius: 12px; padding: 0 16px; background: var(--white); }
+.manage-cat-group { border: 1px solid var(--border); border-left: 3px solid var(--primary); border-radius: 12px; padding: 0 16px; background: var(--white); box-shadow: var(--shadow-sm); }
 .manage-cat-group summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 0; cursor: pointer; font-size: .92rem; }
 .manage-cat-group summary::-webkit-details-marker { display: none; }
 .manage-cat-group summary small { color: var(--muted); font-weight: 500; margin-left: 8px; }
