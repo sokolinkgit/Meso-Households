@@ -9,9 +9,13 @@ create table if not exists public.categories (
   slug text not null unique,
   name text not null,
   emoji text default '',
+  image_url text not null default '',
   sort_order integer not null default 0,
   created_at timestamptz not null default now()
 );
+
+-- Upgrading an existing install: add the category cover-image column if it isn't there yet.
+alter table public.categories add column if not exists image_url text not null default '';
 
 create table if not exists public.products (
   id uuid primary key default gen_random_uuid(),
@@ -19,12 +23,16 @@ create table if not exists public.products (
   category_id uuid not null references public.categories(id) on update cascade on delete restrict,
   price numeric(12,2) not null default 0 check (price >= 0),
   image_url text not null default '',
+  images text[] not null default '{}',
   tag text,
   description text not null default '',
   sort_order integer not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Upgrading an existing install: add the multi-photo gallery column if it isn't there yet.
+alter table public.products add column if not exists images text[] not null default '{}';
 
 -- Admin membership is separate from auth.users so the browser cannot make itself admin.
 create table if not exists public.admin_users (
