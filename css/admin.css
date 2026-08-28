@@ -4,65 +4,145 @@
    ============================================================ */
 
 /* ---------- Shared dialog chrome (login, category, product, manage) ---------- */
-.admin-dialog { border: 0; border-radius: 18px; padding: 0; width: min(440px, 92vw); box-shadow: 0 24px 80px rgba(0,0,0,.28); }
-.admin-dialog::backdrop { background: rgba(0,0,0,.65); backdrop-filter: blur(3px); }
+.admin-dialog { border: 0; border-radius: 20px; padding: 0; width: min(440px, 92vw); box-shadow: 0 24px 80px rgba(0,0,0,.28); background: var(--white); color: var(--ink); }
+.admin-dialog::backdrop { background: rgba(17,17,17,.6); backdrop-filter: blur(3px); }
 .admin-dialog-lg { width: min(640px, 94vw); }
-.admin-form { position: relative; padding: 34px; display: grid; gap: 14px; }
-.admin-form h2 { margin-bottom: -6px; }
+.admin-form { position: relative; padding: 34px; display: grid; gap: 16px; }
+.admin-form h2 { margin-bottom: -6px; font-family: var(--font-head); color: var(--ink); }
 .admin-help { color: var(--muted); font-size: .86rem; }
-.admin-form label { display: grid; gap: 5px; font-size: .82rem; font-weight: 600; }
-.admin-form input, .admin-form select, .admin-form textarea { width: 100%; border: 1px solid var(--border); border-radius: 9px; padding: 10px 12px; font: inherit; font-size: .9rem; background: var(--white); }
-.admin-form input:focus, .admin-form select:focus, .admin-form textarea:focus { outline: 2px solid var(--primary-light); border-color: var(--primary); }
-.dialog-close { position: absolute; top: 15px; right: 17px; font-size: 1.6rem; color: var(--muted); }
-.admin-error { color: var(--primary); min-height: 1.3em; font-size: .82rem; }
-.admin-dialog-actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
-.admin-delete-link { color: var(--primary); margin-top: 0; }
+.admin-form label { display: grid; gap: 6px; font-size: .82rem; font-weight: 600; color: var(--accent-2); }
 
-/* ---------- Photo upload (product dialog) ---------- */
-.image-upload { border: 1px dashed var(--border); border-radius: 12px; padding: 14px; display: grid; gap: 10px; background: var(--cream); }
+.admin-form input,
+.admin-form select,
+.admin-form textarea {
+  width: 100%;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 11px 13px;
+  font: inherit;
+  font-size: .9rem;
+  background: var(--cream);
+  color: var(--ink);
+  transition: border-color .18s, box-shadow .18s, background .18s;
+}
+.admin-form input::placeholder,
+.admin-form textarea::placeholder { color: #9a9a9a; font-style: italic; }
+.admin-form input:focus,
+.admin-form select:focus,
+.admin-form textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-light);
+  background: var(--white);
+}
+.admin-form textarea { resize: vertical; min-height: 72px; }
+
+/* Custom select arrow, brand-coloured instead of the OS-default control */
+.admin-form select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23d90429' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 18px;
+  padding-right: 36px;
+}
+
+.dialog-close { position: absolute; top: 15px; right: 17px; font-size: 1.6rem; line-height: 1; color: var(--muted); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; transition: background .18s, color .18s; }
+.dialog-close:hover { background: var(--primary-light); color: var(--primary-dark); }
+.admin-error { color: var(--primary-dark); min-height: 1.3em; font-size: .82rem; font-weight: 500; }
+.admin-dialog-actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 4px; }
+.admin-delete-link { color: var(--primary-dark); margin-top: 0; }
+
+/* ---------- Field row: select + inline "+" / "edit" icon buttons ---------- */
+.field-row { display: flex; align-items: stretch; gap: 8px; }
+.field-row select { flex: 1; }
+.icon-btn {
+  flex-shrink: 0;
+  width: 42px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: var(--cream);
+  color: var(--primary-dark);
+  font-size: 1.05rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .18s, border-color .18s, transform .15s;
+}
+.icon-btn:hover { background: var(--primary-light); border-color: var(--primary); transform: translateY(-1px); }
+
+/* ---------- Photo upload (product + category dialogs) ---------- */
+.image-upload { border: 1.5px dashed var(--border); border-radius: 12px; padding: 14px; display: grid; gap: 10px; background: var(--cream); }
 .image-upload-preview { width: 100%; max-width: 220px; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 10px; border: 1px solid var(--border); background: var(--white); }
 .image-upload-empty { font-size: .82rem; color: var(--muted); }
 .image-upload-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-.image-upload input[type="file"] { font-size: .8rem; font-weight: 500; }
+
+/* Styled "Choose photo" control replacing the raw OS file-input button */
+.file-btn { position: relative; display: inline-flex; align-items: center; gap: 8px; }
+.file-btn input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.file-btn-label {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--white); border: 1.5px solid var(--primary); color: var(--primary-dark);
+  font-weight: 600; font-size: .82rem; padding: 9px 16px; border-radius: 100px;
+  transition: background .18s, color .18s;
+}
+.file-btn:hover .file-btn-label { background: var(--primary); color: var(--white); }
+
+/* Multi-photo gallery for products */
+.photo-gallery { display: flex; flex-wrap: wrap; gap: 10px; }
+.photo-thumb { position: relative; width: 78px; height: 78px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); background: var(--white); }
+.photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-thumb.is-cover { border: 2px solid var(--primary); }
+.photo-thumb-cover-tag { position: absolute; bottom: 0; left: 0; right: 0; background: var(--primary); color: var(--white); font-size: .58rem; font-weight: 700; text-align: center; text-transform: uppercase; letter-spacing: .04em; padding: 2px 0; }
+.photo-thumb-remove { position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; border-radius: 50%; background: rgba(17,17,17,.75); color: #fff; font-size: .7rem; display: flex; align-items: center; justify-content: center; }
+.photo-thumb-remove:hover { background: var(--primary); }
+.photo-thumb-add { display: flex; align-items: center; justify-content: center; color: var(--primary-dark); font-size: 1.6rem; font-weight: 700; background: var(--cream); border: 1.5px dashed var(--primary-light); cursor: pointer; }
+.photo-thumb-add:hover { background: var(--primary-light); }
+.photo-gallery-hint { font-size: .76rem; color: var(--muted); }
 
 /* ---------- Admin toolbar (sits inside the live Products section) ---------- */
-.admin-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 16px; background: #fff5f6; border: 1px dashed var(--primary); border-radius: 100px; padding: 10px 22px; margin: 0 auto 30px; width: fit-content; max-width: 100%; }
-.admin-toolbar-label { font-weight: 600; font-size: .85rem; color: var(--primary-dark); white-space: nowrap; }
+.admin-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 16px; background: linear-gradient(135deg, var(--primary-light), #fff); border: 1.5px dashed var(--primary); border-radius: 100px; padding: 10px 22px; margin: 0 auto 30px; width: fit-content; max-width: 100%; }
+.admin-toolbar-label { font-weight: 700; font-size: .85rem; color: var(--primary-dark); white-space: nowrap; }
 .admin-toolbar-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .admin-toolbar-actions .btn-text { margin-top: 0; }
 
 /* ---------- Category filter chips: edit pencil + add chip ---------- */
 .filter-chip-wrap { position: relative; display: inline-flex; }
-.filter-chip-edit { position: absolute; top: -7px; right: -7px; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--white); font-size: .68rem; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-sm); transition: background .2s; }
-.filter-chip-edit:hover { background: var(--primary); }
+.filter-chip-img { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; margin-right: 4px; vertical-align: -3px; }
+.filter-chip-edit { position: absolute; top: -7px; right: -7px; width: 22px; height: 22px; border-radius: 50%; background: var(--primary); color: var(--white); font-size: .68rem; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-sm); transition: background .2s; }
+.filter-chip-edit:hover { background: var(--primary-dark); }
 .filter-btn-add { border-style: dashed; color: var(--muted); }
 .filter-btn-add:hover { color: var(--primary-dark); }
 
 /* ---------- Inline admin controls on product cards ---------- */
 .product-card.is-admin .product-media { position: relative; }
 .admin-overlay { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; z-index: 2; }
-.admin-overlay-btn { width: 30px; height: 30px; border-radius: 50%; background: rgba(17,17,17,.72); color: #fff; display: flex; align-items: center; justify-content: center; font-size: .85rem; transition: background .2s, transform .2s; }
-.admin-overlay-btn:hover { background: var(--primary); transform: translateY(-1px); }
+.admin-overlay-btn { width: 30px; height: 30px; border-radius: 50%; background: rgba(217,4,41,.85); color: #fff; display: flex; align-items: center; justify-content: center; font-size: .85rem; transition: background .2s, transform .2s; }
+.admin-overlay-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
 .admin-quick-move { display: grid; gap: 4px; font-size: .72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 12px; }
 .admin-quick-move select { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font: inherit; font-size: .82rem; font-weight: 500; text-transform: none; letter-spacing: normal; background: var(--white); color: var(--ink); }
 
 /* ---------- "Add product" ghost card at the end of the grid ---------- */
 .add-product-card {
-  border: 2px dashed var(--border);
+  border: 2px dashed var(--primary-light);
   background: var(--cream);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: var(--muted);
+  color: var(--primary-dark);
   font-weight: 600;
   font-size: .92rem;
   min-height: 260px;
   transition: border-color .25s, color .25s, background .25s;
 }
 .add-product-card:hover { border-color: var(--primary); color: var(--primary-dark); background: var(--primary-light); }
-.add-product-plus { font-size: 2.2rem; line-height: 1; font-family: var(--font-head); }
+.add-product-plus { font-size: 2.2rem; line-height: 1; font-family: var(--font-head); color: var(--primary); }
 
 /* ---------- "Manage all" catalogue overview modal ---------- */
 .manage-toolbar { display: flex; gap: 10px; margin: 4px 0 6px; }
@@ -71,6 +151,7 @@
 .manage-cat-group summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 0; cursor: pointer; font-size: .92rem; }
 .manage-cat-group summary::-webkit-details-marker { display: none; }
 .manage-cat-group summary small { color: var(--muted); font-weight: 500; margin-left: 8px; }
+.manage-cat-thumb { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; margin-right: 6px; vertical-align: -6px; }
 .manage-cat-actions { display: flex; gap: 12px; flex-shrink: 0; }
 .manage-cat-actions .btn-text { margin-top: 0; }
 .manage-products { display: grid; gap: 12px; padding: 4px 0 16px; }
@@ -80,6 +161,9 @@
 .manage-product-info small { color: var(--muted); }
 .manage-category-select { border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; font: inherit; font-size: .78rem; background: var(--white); }
 .manage-product-row .btn-text { margin-top: 0; }
+
+/* ---------- Buttons: consistent brand look inside admin dialogs ---------- */
+.admin-form .btn-primary:disabled { opacity: .7; cursor: progress; }
 
 @media (max-width: 700px) {
   .admin-toolbar { border-radius: var(--radius); }
