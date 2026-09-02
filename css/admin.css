@@ -151,8 +151,27 @@ body.is-admin .admin-toolbar:not([hidden]) { display: flex; }
 .add-product-card:hover { border-color: var(--primary); color: var(--primary-dark); background: var(--primary-light); }
 .add-product-plus { font-size: 2.2rem; line-height: 1; font-family: var(--font-head); color: var(--primary); }
 
+/* ---------- Bulk upload dialog ---------- */
+.bulk-drop { cursor: pointer; transition: border-color .18s, background .18s; }
+.bulk-drop.dragover { border-color: var(--primary); background: var(--primary-light); }
+.bulk-preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 12px; }
+.bulk-thumb { position: relative; margin: 0; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--white); }
+.bulk-thumb img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block; }
+.bulk-thumb figcaption { font-size: .68rem; color: var(--muted); padding: 6px 8px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.bulk-thumb-remove { position: absolute; top: 5px; right: 5px; width: 22px; height: 22px; border-radius: 50%; background: rgba(17,17,17,.75); color: #fff; font-size: .8rem; display: flex; align-items: center; justify-content: center; }
+.bulk-thumb-remove:hover { background: var(--primary); }
+
 /* ---------- "Manage all" catalogue overview modal ---------- */
-.manage-toolbar { display: flex; gap: 10px; margin: 4px 0 6px; }
+.manage-toolbar { display: flex; gap: 10px; margin: 4px 0 6px; flex-wrap: wrap; }
+.manage-bulk-bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; border: 1.5px dashed var(--border); border-radius: 12px; padding: 10px 14px; background: var(--cream); }
+.manage-select-all { display: inline-flex; align-items: center; gap: 8px; font-size: .85rem; cursor: pointer; color: var(--accent-2); user-select: none; }
+.manage-bulk-count { font-size: .8rem; color: var(--muted); font-weight: 600; }
+#manageDeleteSelectedBtn { margin-left: auto; }
+input[type="checkbox"].manage-product-check,
+.manage-select-all input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--primary); cursor: pointer; }
+.btn-danger { background: var(--primary); color: var(--white); }
+.btn-danger:hover { background: var(--primary-dark); box-shadow: 0 10px 24px rgba(217,4,41,.4); }
+.btn-danger:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
 .manage-list { max-height: 55vh; overflow-y: auto; display: grid; gap: 10px; padding-right: 4px; margin-top: 4px; }
 .manage-cat-group { border: 1px solid var(--border); border-left: 3px solid var(--primary); border-radius: 12px; padding: 0 16px; background: var(--white); box-shadow: var(--shadow-sm); }
 .manage-cat-group summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 0; cursor: pointer; font-size: .92rem; }
@@ -162,7 +181,7 @@ body.is-admin .admin-toolbar:not([hidden]) { display: flex; }
 .manage-cat-actions { display: flex; gap: 12px; flex-shrink: 0; }
 .manage-cat-actions .btn-text { margin-top: 0; }
 .manage-products { display: grid; gap: 12px; padding: 4px 0 16px; }
-.manage-product-row { display: grid; grid-template-columns: 44px 1fr auto auto auto; align-items: center; gap: 12px; border-top: 1px solid var(--border); padding-top: 12px; }
+.manage-product-row { display: grid; grid-template-columns: 18px 44px 1fr auto auto auto; align-items: center; gap: 12px; border-top: 1px solid var(--border); padding-top: 12px; }
 .manage-product-row img { width: 44px; height: 44px; object-fit: cover; border-radius: 8px; background: var(--cream); }
 .manage-product-info { display: grid; gap: 2px; font-size: .85rem; }
 .manage-product-info small { color: var(--muted); }
@@ -176,6 +195,7 @@ body.is-admin .admin-toolbar:not([hidden]) { display: flex; }
   .admin-toolbar { border-radius: var(--radius); }
 }
 @media (max-width: 640px) {
-  .manage-product-row { grid-template-columns: 36px 1fr; row-gap: 8px; }
+  .manage-product-row { grid-template-columns: 18px 36px 1fr; row-gap: 8px; }
   .manage-category-select, .manage-product-row .manage-edit-product, .manage-product-row .manage-delete-product { grid-column: 1 / -1; }
+  #manageDeleteSelectedBtn { margin-left: 0; width: 100%; }
 }

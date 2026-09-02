@@ -485,7 +485,7 @@ async function loadCatalogue() {
     supabaseClient.from("products").select("*, categories(slug, name)").order("sort_order"),
   ]);
   if (!catError && cats?.length) CATEGORIES = cats;
-  if (!productError && rows?.length) PRODUCTS = rows.map((p) => ({ id: p.id, name: p.name, category: p.categories?.slug, categoryLabel: p.categories?.name, price: Number(p.price), image: p.image_url, images: p.images || [], tag: p.tag, desc: p.description }));
+  if (!productError && rows?.length) PRODUCTS = rows.map((p) => ({ id: p.id, name: p.name, category: p.categories?.slug, categoryLabel: p.categories?.name, price: Number(p.price), image: p.image_url, images: p.images || [], tag: p.tag, desc: p.description, sort_order: p.sort_order }));
   renderFilterBar();
   renderProducts($(".filter-btn.active")?.dataset.filter || "all");
   if ($("#manageDialog").open) renderManageList();
@@ -553,6 +553,7 @@ async function deleteUploadedImage(url) {
 
 /* ---------- Category dialog ---------- */
 let categoryReturnToProduct = false;
+let categoryReturnToBulk = false;
 let pendingCategoryImageFile = null;
 function setCategoryImagePreview(url) {
   const img = $("#categoryImagePreview");
@@ -581,7 +582,7 @@ function openCategoryDialog(cat = null) {
   }
   $("#categoryDialog").showModal();
 }
-$("#categoryDialogClose").addEventListener("click", () => { categoryReturnToProduct = false; $("#categoryDialog").close(); });
+$("#categoryDialogClose").addEventListener("click", () => { categoryReturnToProduct = false; categoryReturnToBulk = false; $("#categoryDialog").close(); });
 $("#categoryImageFile").addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -631,6 +632,9 @@ $("#categoryForm").addEventListener("submit", async (event) => {
       populateProductCategorySelect();
       $("#productCategory").value = result.data.slug;
     }
+    if (categoryReturnToBulk && $("#bulkUploadDialog").open) {
+      populateCategorySelect($("#bulkCategory"), result.data.slug);
+    }
     showToast("Category saved");
   } catch (err) {
     $("#categoryError").textContent = err.message || "Something went wrong";
@@ -638,6 +642,7 @@ $("#categoryForm").addEventListener("submit", async (event) => {
     saveBtn.disabled = false;
     saveBtn.textContent = originalLabel;
     categoryReturnToProduct = false;
+    categoryReturnToBulk = false;
   }
 });
 async function deleteCategoryQuick(id) {
@@ -664,10 +669,15 @@ $("#deleteCategoryBtn").addEventListener("click", async () => {
 
 /* ---------- Product dialog ---------- */
 let productPhotos = []; // ordered list of { url, file } — url is a preview (existing URL or data: preview), file is set for new/unsaved uploads
+function populateCategorySelect(selectEl, current) {
+  selectEl.innerHTML = CATEGORIES.map((c) => `<option value="${escapeHtml(c.slug)}">${escapeHtml(c.name)}</option>`).join("");
+  if (current && CATEGORIES.some((c) => c.slug === current)) selectEl.value = current;
+}
 function populateProductCategorySelect() {
-  const current = $("#productCategory").value;
-  $("#productCategory").innerHTML = CATEGORIES.map((c) => `<option value="${escapeHtml(c.slug)}">${escapeHtml(c.name)}</option>`).join("");
-  if (current && CATEGORIES.some((c) => c.slug === current)) $("#productCategory").value = current;
+  populateCategorySelect($("#productCategory"), $("#productCategory").value);
+}
+function nextSortOrder() {
+  return Math.max(0, ...PRODUCTS.map((p) => Number(p.sort_order) || 0)) + 1;
 }
 function renderProductPhotoGallery() {
   const gallery = $("#productPhotoGallery");
@@ -822,6 +832,207 @@ async function moveProductToCategory(productId, newSlug) {
   showToast("Product moved");
 }
 
+/* ---------- Bulk product upload ---------- */
+let bulkFiles = []; // { file, url (objectURL preview), name (suggested from file name) }
+
+function nameFromFileName(file) {
+  const pretty = (file.name || "")
+    .replace(/\.[a-z0-9]+$/i, "")
+    .replace(/[_\-.\u2013\u2014]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (ch) => ch.toUpperCase());
+  return pretty || "New product";
+}
+
+function renderBulkPreviews() {
+  $("#bulkPreviewGrid").innerHTML = bulkFiles
+    .map(
+      (f, i) => `
+    <figure class="bulk-thumb">
+      <img src="${f.url}" alt="${escapeHtml(f.name)}" />
+      <figcaption>${escapeHtml(f.name)}</figcaption>
+      <button type="button" class="bulk-thumb-remove" data-index="${i}" aria-label="Remove ${escapeHtml(f.name)}" title="Remove">&times;</button>
+    </figure>`
+    )
+    .join("");
+  $("#bulkImageEmpty").hidden = bulkFiles.length > 0;
+  $("#bulkCountHint").textContent = bulkFiles.length
+    ? `${bulkFiles.length} photo${bulkFiles.length === 1 ? "" : "s"} — one product each, named after the file. You can rename and add details later.`
+    : "";
+}
+
+function resetBulkFiles() {
+  bulkFiles.forEach((f) => URL.revokeObjectURL(f.url));
+  bulkFiles = [];
+}
+
+function openBulkUploadDialog() {
+  resetBulkFiles();
+  renderBulkPreviews();
+  $("#bulkUploadError").textContent = "";
+  const submitBtn = $("#bulkUploadSubmit");
+  submitBtn.disabled = false;
+  submitBtn.textContent = "Add products";
+  const activeSlug = $(".filter-btn.active")?.dataset.filter;
+  populateCategorySelect($("#bulkCategory"), activeSlug !== "all" ? activeSlug : $("#bulkCategory").value);
+  $("#bulkUploadDialog").showModal();
+}
+
+function addBulkFiles(fileList) {
+  const files = [...fileList].filter((f) => (f.type || "").startsWith("image/"));
+  if (!files.length) return;
+  files.forEach((file) => bulkFiles.push({ file, url: URL.createObjectURL(file), name: nameFromFileName(file) }));
+  renderBulkPreviews();
+}
+
+async function runWithConcurrency(items, limit, worker) {
+  const results = new Array(items.length);
+  let next = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, async () => {
+      while (next < items.length) {
+        const i = next++;
+        results[i] = await worker(items[i], i);
+      }
+    })
+  );
+  return results;
+}
+
+$("#bulkAddBtn").addEventListener("click", () => openBulkUploadDialog());
+$("#manageBulkAddBtn").addEventListener("click", () => { $("#manageDialog").close(); openBulkUploadDialog(); });
+$("#bulkUploadClose").addEventListener("click", () => { resetBulkFiles(); renderBulkPreviews(); $("#bulkUploadDialog").close(); });
+$("#bulkCancelBtn").addEventListener("click", () => { resetBulkFiles(); renderBulkPreviews(); $("#bulkUploadDialog").close(); });
+$("#bulkCategoryAddBtn").addEventListener("click", () => {
+  categoryReturnToBulk = true;
+  openCategoryDialog();
+});
+$("#bulkImageFile").addEventListener("change", (e) => {
+  addBulkFiles(e.target.files);
+  e.target.value = "";
+});
+$("#bulkPreviewGrid").addEventListener("click", (e) => {
+  const btn = e.target.closest(".bulk-thumb-remove");
+  if (!btn) return;
+  const i = Number(btn.dataset.index);
+  const [removed] = bulkFiles.splice(i, 1);
+  if (removed) URL.revokeObjectURL(removed.url);
+  renderBulkPreviews();
+});
+// Drag & drop support for "select all images"
+const bulkDropZone = $("#bulkDropZone");
+["dragenter", "dragover"].forEach((ev) =>
+  bulkDropZone.addEventListener(ev, (e) => { e.preventDefault(); bulkDropZone.classList.add("dragover"); })
+);
+["dragleave", "drop"].forEach((ev) =>
+  bulkDropZone.addEventListener(ev, (e) => { e.preventDefault(); bulkDropZone.classList.remove("dragover"); })
+);
+bulkDropZone.addEventListener("drop", (e) => {
+  if (e.dataTransfer?.files?.length) addBulkFiles(e.dataTransfer.files);
+});
+
+$("#bulkUploadForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!isAdmin) return;
+  const errorEl = $("#bulkUploadError");
+  const submitBtn = $("#bulkUploadSubmit");
+  errorEl.textContent = "";
+  const category = CATEGORIES.find((c) => c.slug === $("#bulkCategory").value);
+  if (!category) return (errorEl.textContent = "Please pick a category");
+  if (!bulkFiles.length) return (errorEl.textContent = "Choose at least one product photo");
+  const originalLabel = submitBtn.textContent;
+  submitBtn.disabled = true;
+  const urls = new Array(bulkFiles.length);
+  try {
+    submitBtn.textContent = `Uploading 0/${bulkFiles.length}…`;
+    await runWithConcurrency(bulkFiles, 4, async (f, i) => {
+      urls[i] = await uploadImage(f.file);
+      submitBtn.textContent = `Uploading ${urls.filter(Boolean).length}/${bulkFiles.length}…`;
+    });
+    submitBtn.textContent = "Saving…";
+    const base = nextSortOrder();
+    const rows = bulkFiles.map((f, i) => ({
+      name: f.name,
+      category_id: category.id,
+      price: 0,
+      image_url: urls[i],
+      images: [urls[i]],
+      tag: null,
+      description: "",
+      sort_order: base + i,
+    }));
+    const { error } = await supabaseClient.from("products").insert(rows);
+    if (error) throw error;
+    resetBulkFiles();
+    renderBulkPreviews();
+    $("#bulkUploadDialog").close();
+    await refreshAdmin();
+    showToast(`${rows.length} product${rows.length === 1 ? "" : "s"} added to ${category.name} — edit details later, one by one`);
+  } catch (err) {
+    // Best effort: don't leave orphaned photos behind if the insert failed.
+    await Promise.all(urls.filter(Boolean).map(deleteUploadedImage));
+    errorEl.textContent = err.message || "Something went wrong";
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalLabel;
+  }
+});
+
+/* ---------- Bulk product delete ---------- */
+const selectedProductIds = new Set();
+
+function updateManageBulkUI() {
+  const liveIds = new Set(PRODUCTS.map((p) => p.id));
+  for (const id of [...selectedProductIds]) if (!liveIds.has(id)) selectedProductIds.delete(id);
+  const total = PRODUCTS.length;
+  const sel = selectedProductIds.size;
+  const selectAll = $("#manageSelectAll");
+  if (selectAll) {
+    selectAll.checked = total > 0 && sel === total;
+    selectAll.indeterminate = sel > 0 && sel < total;
+  }
+  const countEl = $("#manageSelectedCount");
+  if (countEl) countEl.textContent = sel ? `${sel} selected` : "";
+  const btn = $("#manageDeleteSelectedBtn");
+  if (btn) {
+    btn.disabled = sel === 0;
+    btn.textContent = sel ? `🗑 Delete selected (${sel})` : "🗑 Delete selected";
+  }
+}
+
+async function deleteSelectedProducts() {
+  const toDelete = PRODUCTS.filter((p) => selectedProductIds.has(p.id));
+  if (!toDelete.length) return;
+  const names = toDelete.map((p) => `"${p.name}"`);
+  const preview = names.length > 4 ? names.slice(0, 4).join(", ") + ` and ${names.length - 4} more` : names.join(", ");
+  if (!confirm(`Delete ${toDelete.length} product${toDelete.length === 1 ? "" : "s"} (${preview})? This cannot be undone.`)) return;
+  const btn = $("#manageDeleteSelectedBtn");
+  btn.disabled = true;
+  try {
+    const ids = toDelete.map((p) => p.id);
+    for (let i = 0; i < ids.length; i += 50) {
+      const r = await supabaseClient.from("products").delete().in("id", ids.slice(i, i + 50));
+      if (r.error) throw r.error;
+    }
+    // Best-effort cleanup of the photos that were only used by these products.
+    await Promise.all(toDelete.flatMap((p) => productImages(p)).map(deleteUploadedImage));
+    selectedProductIds.clear();
+    await refreshAdmin();
+    updateManageBulkUI();
+    showToast(`${ids.length} product${ids.length === 1 ? "" : "s"} deleted`);
+  } catch (err) {
+    showToast(err.message || "Something went wrong");
+    updateManageBulkUI();
+  }
+}
+$("#manageDeleteSelectedBtn").addEventListener("click", deleteSelectedProducts);
+$("#manageSelectAll").addEventListener("change", (e) => {
+  if (e.target.checked) PRODUCTS.forEach((p) => selectedProductIds.add(p.id));
+  else PRODUCTS.forEach((p) => selectedProductIds.delete(p.id));
+  $$("#manageList .manage-product-check").forEach((c) => (c.checked = e.target.checked));
+  updateManageBulkUI();
+});
+
 /* ---------- Manage-all catalogue overview ---------- */
 function renderManageList() {
   $("#manageList").innerHTML = CATEGORIES.map((c) => {
@@ -842,6 +1053,7 @@ function renderManageList() {
                 .map(
                   (p) => `
           <div class="manage-product-row" data-id="${p.id}">
+            <label class="manage-product-check-wrap"><input type="checkbox" class="manage-product-check" data-id="${p.id}" ${selectedProductIds.has(p.id) ? "checked" : ""} aria-label="Select ${escapeHtml(p.name)}" /></label>
             <img src="${escapeHtml(p.image || "")}" alt="" />
             <div class="manage-product-info"><strong>${escapeHtml(p.name)}</strong><small>${formatKES(p.price)}</small></div>
             <select class="manage-category-select" data-id="${p.id}">
@@ -857,6 +1069,7 @@ function renderManageList() {
       </div>
     </details>`;
   }).join("");
+  updateManageBulkUI();
 }
 $("#manageDialogClose").addEventListener("click", () => $("#manageDialog").close());
 $("#manageCatalogueBtn").addEventListener("click", () => { renderManageList(); $("#manageDialog").showModal(); });
@@ -873,6 +1086,13 @@ $("#manageList").addEventListener("click", (e) => {
   if (delProd) deleteProductQuick(delProd.dataset.id);
 });
 $("#manageList").addEventListener("change", (e) => {
+  const check = e.target.closest(".manage-product-check");
+  if (check) {
+    if (check.checked) selectedProductIds.add(check.dataset.id);
+    else selectedProductIds.delete(check.dataset.id);
+    updateManageBulkUI();
+    return;
+  }
   const sel = e.target.closest(".manage-category-select");
   if (sel) moveProductToCategory(sel.dataset.id, sel.value);
 });

@@ -13,6 +13,9 @@ A fully responsive single-page website for Meso Households, a household goods sh
 - Product catalogue with category filters (Kitchen Appliances, Flasks & Thermos, Dining, Cookware)
 - Shopping cart with quantity controls (saved in localStorage)
 - **Order via WhatsApp** — the cart builds a ready-to-send order message
+- **Admin panel** (sign in with a Supabase admin account) — add/edit/delete categories & products with photo uploads, plus:
+  - **Bulk upload** — pick (or create) a category, then select *all* product photos at once (file picker or drag & drop); each photo becomes one product, and price, tag and description can be filled in later, one by one
+  - **Bulk delete** — in "Manage all", tick any products (or hit "Select all") and delete them in one go
 - Embedded Google Map + directions link, floating WhatsApp button, back-to-top
 - Mobile-first responsive design with hamburger menu
 - Scroll-reveal animations, toast notifications, active-nav highlighting
