@@ -231,6 +231,7 @@
           <div class="admin-toolbar-actions">
             <button class="btn btn-outline btn-sm" type="button" id="addCategoryBtn">+ Category</button>
             <button class="btn btn-primary btn-sm" type="button" id="addProductBtn">+ Product</button>
+            <button class="btn btn-outline btn-sm" type="button" id="bulkAddBtn">⬆ Bulk upload</button>
             <button class="btn-text" type="button" id="manageCatalogueBtn">Manage all</button>
             <button class="btn-text" type="button" id="logoutBtn">Sign out</button>
           </div>
@@ -631,16 +632,56 @@
     </form>
   </dialog>
 
+  <!-- ===== Bulk upload products ===== -->
+  <dialog class="admin-dialog admin-dialog-lg" id="bulkUploadDialog">
+    <form class="admin-form" id="bulkUploadForm">
+      <button class="dialog-close" id="bulkUploadClose" type="button" aria-label="Close">&times;</button>
+      <span class="section-tag">Bulk upload</span>
+      <h2>Add many products at once</h2>
+      <p class="admin-help">Pick a category, then choose all the product photos — each photo becomes one product. Price, tag and description are optional: you can fill them in later, one by one.</p>
+      <label>Category
+        <div class="field-row">
+          <select id="bulkCategory" required></select>
+          <button class="icon-btn" type="button" id="bulkCategoryAddBtn" title="Add a new category" aria-label="Add a new category">+</button>
+        </div>
+      </label>
+      <label>Product photos
+        <div class="image-upload bulk-drop" id="bulkDropZone">
+          <p class="image-upload-empty" id="bulkImageEmpty">Drop all your product photos here, or</p>
+          <div class="image-upload-actions">
+            <span class="file-btn">
+              <span class="file-btn-label">📷 Choose photos</span>
+              <input type="file" id="bulkImageFile" accept="image/*" multiple />
+            </span>
+          </div>
+        </div>
+        <div class="bulk-preview-grid" id="bulkPreviewGrid"></div>
+        <p class="photo-gallery-hint" id="bulkCountHint"></p>
+      </label>
+      <div class="admin-dialog-actions">
+        <button class="btn btn-primary" type="submit" id="bulkUploadSubmit">Add products</button>
+        <button class="btn-text" type="button" id="bulkCancelBtn">Cancel</button>
+      </div>
+      <p class="admin-error" id="bulkUploadError" role="alert"></p>
+    </form>
+  </dialog>
+
   <!-- ===== Manage catalogue overview ===== -->
   <dialog class="admin-dialog admin-dialog-lg" id="manageDialog">
     <div class="admin-form">
       <button class="dialog-close" id="manageDialogClose" type="button" aria-label="Close">&times;</button>
       <span class="section-tag">Catalogue</span>
       <h2>Manage categories &amp; products</h2>
-      <p class="admin-help">Expand a category to see its products. Use the dropdown on any product to move it to a different category, or edit/delete it directly.</p>
+      <p class="admin-help">Expand a category to see its products. Use the dropdown on any product to move it to a different category, or edit/delete it directly. Tick products to delete several at once.</p>
       <div class="manage-toolbar">
         <button class="btn btn-outline btn-sm" type="button" id="manageAddCategoryBtn">+ Category</button>
         <button class="btn btn-primary btn-sm" type="button" id="manageAddProductBtn">+ Product</button>
+        <button class="btn btn-outline btn-sm" type="button" id="manageBulkAddBtn">⬆ Bulk upload</button>
+      </div>
+      <div class="manage-bulk-bar">
+        <label class="manage-select-all"><input type="checkbox" id="manageSelectAll" /><strong>Select all</strong></label>
+        <span class="manage-bulk-count" id="manageSelectedCount"></span>
+        <button class="btn btn-danger btn-sm" type="button" id="manageDeleteSelectedBtn" disabled>🗑 Delete selected</button>
       </div>
       <div class="manage-list" id="manageList"><!-- injected by JS --></div>
     </div>
