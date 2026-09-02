@@ -1099,11 +1099,14 @@ function renderMergePhotoGallery() {
   gallery.innerHTML = mergePhotos
     .map(
       (photo, i) => `
-    <div class="photo-thumb${i === 0 ? " is-cover" : ""}" data-index="${i}" title="${escapeHtml(photo.sourceName)}">
-      <img src="${photo.url}" alt="${escapeHtml(photo.sourceName)} photo ${i + 1}" />
-      ${i === 0 ? `<span class="photo-thumb-cover-tag">Cover</span>` : ""}
-      <button type="button" class="photo-thumb-remove" data-index="${i}" aria-label="Remove photo ${i + 1}" title="Remove">&times;</button>
-    </div>`
+    <figure class="photo-card-lg${i === 0 ? " is-cover" : ""}" data-index="${i}" title="${escapeHtml(photo.sourceName)} — click to make this the cover photo">
+      <div class="photo-thumb">
+        <img src="${photo.url}" alt="${escapeHtml(photo.sourceName)} photo ${i + 1}" />
+        ${i === 0 ? `<span class="photo-thumb-cover-tag">Cover</span>` : ""}
+        <button type="button" class="photo-thumb-remove" data-index="${i}" aria-label="Remove photo ${i + 1}" title="Remove">&times;</button>
+      </div>
+      <figcaption class="photo-card-lg-name">${escapeHtml(photo.sourceName)}</figcaption>
+    </figure>`
     )
     .join("");
 }
@@ -1140,7 +1143,7 @@ $("#mergeDialogClose").addEventListener("click", () => $("#mergeDialog").close()
 $("#mergeCancelBtn").addEventListener("click", () => $("#mergeDialog").close());
 $("#mergePhotoGallery").addEventListener("click", (e) => {
   const removeBtn = e.target.closest(".photo-thumb-remove");
-  const thumb = e.target.closest(".photo-thumb");
+  const thumb = e.target.closest(".photo-card-lg");
   if (removeBtn) {
     mergePhotos.splice(Number(removeBtn.dataset.index), 1);
     renderMergePhotoGallery();
