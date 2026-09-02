@@ -232,6 +232,7 @@
             <button class="btn btn-outline btn-sm" type="button" id="addCategoryBtn">+ Category</button>
             <button class="btn btn-primary btn-sm" type="button" id="addProductBtn">+ Product</button>
             <button class="btn btn-outline btn-sm" type="button" id="bulkAddBtn">⬆ Bulk upload</button>
+            <button class="btn btn-primary btn-sm" type="button" id="mergeCatalogueBtn">⧉ Merge</button>
             <button class="btn-text" type="button" id="manageCatalogueBtn">Manage all</button>
             <button class="btn-text" type="button" id="logoutBtn">Sign out</button>
           </div>
@@ -638,7 +639,7 @@
       <button class="dialog-close" id="bulkUploadClose" type="button" aria-label="Close">&times;</button>
       <span class="section-tag">Bulk upload</span>
       <h2>Add many products at once</h2>
-      <p class="admin-help">Pick a category, then choose all the product photos — each photo becomes one product. Price, tag and description are optional: you can fill them in later, one by one.</p>
+      <p class="admin-help">Pick a category, then choose all the product photos — each photo becomes one product. Price, tag and description are optional: you can fill them in later, one by one. If several photos are the <strong>same product in different colours / types</strong>, use <strong>Manage all → Merge selected</strong> to turn them into one product with all the photos.</p>
       <label>Category
         <div class="field-row">
           <select id="bulkCategory" required></select>
@@ -658,6 +659,10 @@
         <div class="bulk-preview-grid" id="bulkPreviewGrid"></div>
         <p class="photo-gallery-hint" id="bulkCountHint"></p>
       </label>
+      <label class="bulk-combine-option">
+        <input type="checkbox" id="bulkCombinePhotos" />
+        <span>Combine all selected photos into <strong>ONE product</strong> — use this when the photos are the same item in different colours / types / sizes.</span>
+      </label>
       <div class="admin-dialog-actions">
         <button class="btn btn-primary" type="submit" id="bulkUploadSubmit">Add products</button>
         <button class="btn-text" type="button" id="bulkCancelBtn">Cancel</button>
@@ -672,7 +677,7 @@
       <button class="dialog-close" id="manageDialogClose" type="button" aria-label="Close">&times;</button>
       <span class="section-tag">Catalogue</span>
       <h2>Manage categories &amp; products</h2>
-      <p class="admin-help">Expand a category to see its products. Use the dropdown on any product to move it to a different category, or edit/delete it directly. Tick products to delete several at once.</p>
+      <p class="admin-help">Expand a category to see its products. Use the dropdown on any product to move it to a different category, or edit/delete it directly. Tick 2 or more products for the same item in different colours / types, then press <strong>Merge selected</strong> to combine them into one product with all their photos. You can also tick products to delete several at once.</p>
       <div class="manage-toolbar">
         <button class="btn btn-outline btn-sm" type="button" id="manageAddCategoryBtn">+ Category</button>
         <button class="btn btn-primary btn-sm" type="button" id="manageAddProductBtn">+ Product</button>
@@ -681,10 +686,53 @@
       <div class="manage-bulk-bar">
         <label class="manage-select-all"><input type="checkbox" id="manageSelectAll" /><strong>Select all</strong></label>
         <span class="manage-bulk-count" id="manageSelectedCount"></span>
+        <button class="btn btn-outline btn-sm" type="button" id="manageMergeSelectedBtn" disabled title="Merge 2 or more selected products into one product with all their photos">⧉ Merge selected</button>
         <button class="btn btn-danger btn-sm" type="button" id="manageDeleteSelectedBtn" disabled>🗑 Delete selected</button>
       </div>
       <div class="manage-list" id="manageList"><!-- injected by JS --></div>
     </div>
+  </dialog>
+
+  <!-- ===== Merge selected products ===== -->
+  <dialog class="admin-dialog admin-dialog-lg" id="mergeDialog">
+    <form class="admin-form" id="mergeForm">
+      <button class="dialog-close" id="mergeDialogClose" type="button" aria-label="Close">&times;</button>
+      <span class="section-tag">Merge products</span>
+      <h2>Make these products into one</h2>
+      <p class="admin-help">The selected products will be combined into <strong>one product</strong> that keeps all of their photos (for different colours / types / sizes). The extra product entries are removed automatically.</p>
+      <input type="hidden" id="mergeSourceIds" />
+      <label>Product name<input id="mergeName" required placeholder="e.g. Stainless Steel Water Bottles" /></label>
+      <label>Category
+        <select id="mergeCategory" required></select>
+      </label>
+      <label>Price (KES)<input id="mergePrice" type="number" min="0" step="0.01" required placeholder="e.g. 850" /></label>
+      <label>Tag (optional)
+        <input id="mergeTag" list="mergeTagOptions" placeholder="Pick one or type your own, e.g. Best Seller" />
+        <datalist id="mergeTagOptions">
+          <option value="Best Seller"></option>
+          <option value="Hot"></option>
+          <option value="New Arrival"></option>
+          <option value="Limited Stock"></option>
+          <option value="Sale"></option>
+          <option value="Trending"></option>
+        </datalist>
+      </label>
+      <label>Description
+        <textarea id="mergeDescription" rows="3" placeholder="e.g. Leak-proof reusable bottles in assorted colours. Great for kids & gym."></textarea>
+      </label>
+      <label>Photos kept on the merged product
+        <div class="image-upload">
+          <div class="photo-gallery" id="mergePhotoGallery"></div>
+          <p class="image-upload-empty" id="mergeImageEmpty">No photos available to merge.</p>
+          <p class="photo-gallery-hint">All photos from the selected products are kept. The first photo is the cover image — click a thumbnail to make it the cover, or remove a photo you don't want.</p>
+        </div>
+      </label>
+      <div class="admin-dialog-actions">
+        <button class="btn btn-primary" type="submit" id="mergeSubmitBtn">Merge products</button>
+        <button class="btn-text" type="button" id="mergeCancelBtn">Cancel</button>
+      </div>
+      <p class="admin-error" id="mergeError" role="alert"></p>
+    </form>
   </dialog>
 
   <!-- ===== Toast ===== -->

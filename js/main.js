@@ -160,12 +160,20 @@ function renderProducts(filter = "all") {
         `Please confirm availability and delivery details.\n\n` +
         `Thank you!`
     );
+    const imgs = productImages(p);
+    const cover = imgs[0] || p.image || "";
     const card = document.createElement("article");
     card.className = "product-card" + (isAdmin ? " is-admin" : "");
     card.style.animationDelay = i * 0.06 + "s";
     card.innerHTML = `
-      <div class="product-media">
-        <img src="${p.image}" alt="${p.name}" loading="lazy" />
+      <div class="product-media" data-product-gallery="${escapeHtml(p.id)}">
+        <img class="product-main-img" src="${cover}" alt="${p.name}" loading="lazy" />
+        ${imgs.length > 1 ? `
+          <button class="product-gal-nav product-gal-prev" type="button" data-id="${escapeHtml(p.id)}" data-step="-1" aria-label="Previous photo" title="Previous photo">‹</button>
+          <button class="product-gal-nav product-gal-next" type="button" data-id="${escapeHtml(p.id)}" data-step="1" aria-label="Next photo" title="Next photo">›</button>
+          <div class="product-gal-dots" aria-label="Product photo gallery">
+            ${imgs.map((_, idx) => `<button class="product-gal-dot${idx === 0 ? " active" : ""}" type="button" data-id="${escapeHtml(p.id)}" data-index="${idx}" aria-label="Show photo ${idx + 1} of ${imgs.length}"></button>`).join("")}
+          </div>` : ""}
         ${p.tag ? `<span class="product-tag ${p.tag === "Hot" ? "hot" : ""}">${p.tag}</span>` : ""}
         ${isAdmin ? `
           <div class="admin-overlay">
@@ -319,11 +327,31 @@ function closeCart() {
   document.body.style.overflow = "";
 }
 
+function showProductGalleryImage(media, product, index) {
+  const imgs = productImages(product);
+  if (!imgs.length || !media) return;
+  const i = ((index % imgs.length) + imgs.length) % imgs.length;
+  const main = media.querySelector(".product-main-img");
+  if (main) main.src = imgs[i];
+  $$(".product-gal-dot", media).forEach((d, idx) => d.classList.toggle("active", idx === i));
+}
+
 productsGrid.addEventListener("click", (e) => {
   const btn = e.target.closest(".add-btn");
   const edit = e.target.closest(".edit-product-quick");
   const del = e.target.closest(".delete-product-quick");
   const addGhost = e.target.closest("#addProductGhostCard");
+  const galBtn = e.target.closest(".product-gal-nav");
+  const galDot = e.target.closest(".product-gal-dot");
+  const media = e.target.closest(".product-media");
+  if (galBtn) {
+    const product = PRODUCTS.find((p) => String(p.id) === String(galBtn.dataset.id));
+    const activeDot = media?.querySelector(".product-gal-dot.active");
+    const current = activeDot ? Number(activeDot.dataset.index) : 0;
+    const next = current + Number(galBtn.dataset.step || 1);
+    showProductGalleryImage(media, product, next);
+  }
+  if (galDot) showProductGalleryImage(media, PRODUCTS.find((p) => String(p.id) === String(galDot.dataset.id)), Number(galDot.dataset.index));
   if (btn) addToCart(btn.dataset.id);
   if (edit) openProductDialog(PRODUCTS.find((p) => String(p.id) === String(edit.dataset.id)));
   if (del) deleteProductQuick(del.dataset.id);
@@ -857,8 +885,11 @@ function renderBulkPreviews() {
     )
     .join("");
   $("#bulkImageEmpty").hidden = bulkFiles.length > 0;
+  const combine = $("#bulkCombinePhotos")?.checked;
   $("#bulkCountHint").textContent = bulkFiles.length
-    ? `${bulkFiles.length} photo${bulkFiles.length === 1 ? "" : "s"} — one product each, named after the file. You can rename and add details later.`
+    ? combine
+      ? `${bulkFiles.length} photo${bulkFiles.length === 1 ? "" : "s"} — saved as ONE product with these photos. Edit the name and details later.`
+      : `${bulkFiles.length} photo${bulkFiles.length === 1 ? "" : "s"} — one product each, named after the file. You can rename and add details later, or use Manage all → Merge selected to combine colours/types into one product.`
     : "";
 }
 
@@ -869,6 +900,7 @@ function resetBulkFiles() {
 
 function openBulkUploadDialog() {
   resetBulkFiles();
+  $("#bulkCombinePhotos").checked = false;
   renderBulkPreviews();
   $("#bulkUploadError").textContent = "";
   const submitBtn = $("#bulkUploadSubmit");
@@ -912,6 +944,7 @@ $("#bulkImageFile").addEventListener("change", (e) => {
   addBulkFiles(e.target.files);
   e.target.value = "";
 });
+$("#bulkCombinePhotos").addEventListener("change", () => renderBulkPreviews());
 $("#bulkPreviewGrid").addEventListener("click", (e) => {
   const btn = e.target.closest(".bulk-thumb-remove");
   if (!btn) return;
@@ -951,24 +984,42 @@ $("#bulkUploadForm").addEventListener("submit", async (event) => {
       submitBtn.textContent = `Uploading ${urls.filter(Boolean).length}/${bulkFiles.length}…`;
     });
     submitBtn.textContent = "Saving…";
+    const combinePhotos = $("#bulkCombinePhotos").checked;
+    const uploadedCount = urls.length;
     const base = nextSortOrder();
-    const rows = bulkFiles.map((f, i) => ({
-      name: f.name,
-      category_id: category.id,
-      price: 0,
-      image_url: urls[i],
-      images: [urls[i]],
-      tag: null,
-      description: "",
-      sort_order: base + i,
-    }));
-    const { error } = await supabaseClient.from("products").insert(rows);
+    const { error } = combinePhotos
+      ? await supabaseClient.from("products").insert({
+          name: nameFromFileName(bulkFiles[0].file),
+          category_id: category.id,
+          price: 0,
+          image_url: urls[0],
+          images: urls,
+          tag: null,
+          description: "",
+          sort_order: base,
+        })
+      : await supabaseClient.from("products").insert(
+          bulkFiles.map((f, i) => ({
+            name: f.name,
+            category_id: category.id,
+            price: 0,
+            image_url: urls[i],
+            images: [urls[i]],
+            tag: null,
+            description: "",
+            sort_order: base + i,
+          }))
+        );
     if (error) throw error;
     resetBulkFiles();
     renderBulkPreviews();
     $("#bulkUploadDialog").close();
     await refreshAdmin();
-    showToast(`${rows.length} product${rows.length === 1 ? "" : "s"} added to ${category.name} — edit details later, one by one`);
+    showToast(
+      combinePhotos
+        ? `${uploadedCount} photo${uploadedCount === 1 ? "" : "s"} saved as ONE product in ${category.name} — edit the name/details later`
+        : `${uploadedCount} product${uploadedCount === 1 ? "" : "s"} added to ${category.name} — edit details later, one by one`
+    );
   } catch (err) {
     // Best effort: don't leave orphaned photos behind if the insert failed.
     await Promise.all(urls.filter(Boolean).map(deleteUploadedImage));
@@ -997,6 +1048,11 @@ function updateManageBulkUI() {
   if (btn) {
     btn.disabled = sel === 0;
     btn.textContent = sel ? `🗑 Delete selected (${sel})` : "🗑 Delete selected";
+  }
+  const mergeBtn = $("#manageMergeSelectedBtn");
+  if (mergeBtn) {
+    mergeBtn.disabled = sel < 2;
+    mergeBtn.textContent = sel >= 2 ? `⧉ Merge selected (${sel})` : "⧉ Merge selected";
   }
 }
 
@@ -1033,6 +1089,125 @@ $("#manageSelectAll").addEventListener("change", (e) => {
   updateManageBulkUI();
 });
 
+/* ---------- Merge selected products ---------- */
+let mergePhotos = []; // ordered { url, sourceName } — photos gathered from the selected products
+
+function renderMergePhotoGallery() {
+  const gallery = $("#mergePhotoGallery");
+  const empty = $("#mergeImageEmpty");
+  empty.hidden = mergePhotos.length > 0;
+  gallery.innerHTML = mergePhotos
+    .map(
+      (photo, i) => `
+    <div class="photo-thumb${i === 0 ? " is-cover" : ""}" data-index="${i}" title="${escapeHtml(photo.sourceName)}">
+      <img src="${photo.url}" alt="${escapeHtml(photo.sourceName)} photo ${i + 1}" />
+      ${i === 0 ? `<span class="photo-thumb-cover-tag">Cover</span>` : ""}
+      <button type="button" class="photo-thumb-remove" data-index="${i}" aria-label="Remove photo ${i + 1}" title="Remove">&times;</button>
+    </div>`
+    )
+    .join("");
+}
+
+function openMergeDialog() {
+  const selected = PRODUCTS.filter((p) => selectedProductIds.has(p.id));
+  if (selected.length < 2) return showToast("Select at least two products to merge");
+  const base = selected[0];
+  const seen = new Set();
+  mergePhotos = [];
+  selected.forEach((product) => {
+    productImages(product).forEach((url) => {
+      if (!url || seen.has(url)) return;
+      seen.add(url);
+      mergePhotos.push({ url, sourceName: product.name });
+    });
+  });
+  $("#mergeSourceIds").value = JSON.stringify(selected.map((p) => p.id));
+  $("#mergeName").value = base.name || "";
+  populateCategorySelect($("#mergeCategory"), base.category);
+  $("#mergePrice").value = base.price ?? 0;
+  $("#mergeTag").value = base.tag || "";
+  $("#mergeDescription").value = base.desc || "";
+  $("#mergeError").textContent = "";
+  renderMergePhotoGallery();
+  const submitBtn = $("#mergeSubmitBtn");
+  submitBtn.disabled = false;
+  submitBtn.textContent = `Merge ${selected.length} products`;
+  if (!$("#mergeDialog").open) $("#mergeDialog").showModal();
+}
+
+$("#manageMergeSelectedBtn").addEventListener("click", openMergeDialog);
+$("#mergeDialogClose").addEventListener("click", () => $("#mergeDialog").close());
+$("#mergeCancelBtn").addEventListener("click", () => $("#mergeDialog").close());
+$("#mergePhotoGallery").addEventListener("click", (e) => {
+  const removeBtn = e.target.closest(".photo-thumb-remove");
+  const thumb = e.target.closest(".photo-thumb");
+  if (removeBtn) {
+    mergePhotos.splice(Number(removeBtn.dataset.index), 1);
+    renderMergePhotoGallery();
+    return;
+  }
+  if (thumb) {
+    const i = Number(thumb.dataset.index);
+    if (i > 0) {
+      const [chosen] = mergePhotos.splice(i, 1);
+      mergePhotos.unshift(chosen);
+      renderMergePhotoGallery();
+    }
+  }
+});
+$("#mergeForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!isAdmin) return;
+  const errorEl = $("#mergeError");
+  const submitBtn = $("#mergeSubmitBtn");
+  errorEl.textContent = "";
+  const sourceIds = JSON.parse($("#mergeSourceIds").value || "[]");
+  const sourceProducts = PRODUCTS.filter((p) => sourceIds.includes(p.id));
+  const category = CATEGORIES.find((c) => c.slug === $("#mergeCategory").value);
+  if (!category) return (errorEl.textContent = "Please pick a category");
+  if (sourceProducts.length < 2) return (errorEl.textContent = "Select at least two products to merge");
+  if (!mergePhotos.length) return (errorEl.textContent = "There are no photos to keep on the merged product");
+  const original = submitBtn.textContent;
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Merging…";
+  let mergedId = null;
+  const minOrder = sourceProducts.reduce((min, p) => Math.min(min, Number(p.sort_order) || Infinity), Infinity);
+  try {
+    const payload = {
+      name: $("#mergeName").value.trim(),
+      category_id: category.id,
+      price: Number($("#mergePrice").value),
+      image_url: mergePhotos[0].url,
+      images: mergePhotos.map((photo) => photo.url),
+      tag: $("#mergeTag").value.trim() || null,
+      description: $("#mergeDescription").value.trim(),
+      sort_order: isFinite(minOrder) ? minOrder : nextSortOrder(),
+    };
+    const inserted = await supabaseClient.from("products").insert(payload).select().single();
+    if (inserted.error) throw inserted.error;
+    mergedId = inserted.data.id;
+    const ids = sourceProducts.map((p) => p.id);
+    for (let i = 0; i < ids.length; i += 50) {
+      const r = await supabaseClient.from("products").delete().in("id", ids.slice(i, i + 50));
+      if (r.error) throw r.error;
+    }
+    selectedProductIds.clear();
+    $("#mergeDialog").close();
+    await refreshAdmin();
+    if ($("#manageDialog").open) {
+      renderManageList();
+      updateManageBulkUI();
+    }
+    showToast(`${sourceProducts.length} products merged into one product with ${mergePhotos.length} photo${mergePhotos.length === 1 ? "" : "s"}`);
+  } catch (err) {
+    if (mergedId) await supabaseClient.from("products").delete().eq("id", mergedId).then(() => {});
+    errorEl.textContent = err.message || "Something went wrong";
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = original;
+  }
+});
+
 /* ---------- Manage-all catalogue overview ---------- */
 function renderManageList() {
   $("#manageList").innerHTML = CATEGORIES.map((c) => {
@@ -1055,7 +1230,7 @@ function renderManageList() {
           <div class="manage-product-row" data-id="${p.id}">
             <label class="manage-product-check-wrap"><input type="checkbox" class="manage-product-check" data-id="${p.id}" ${selectedProductIds.has(p.id) ? "checked" : ""} aria-label="Select ${escapeHtml(p.name)}" /></label>
             <img src="${escapeHtml(p.image || "")}" alt="" />
-            <div class="manage-product-info"><strong>${escapeHtml(p.name)}</strong><small>${formatKES(p.price)}</small></div>
+            <div class="manage-product-info"><strong>${escapeHtml(p.name)}</strong><small>${formatKES(p.price)}${productImages(p).length > 1 ? ` · ${productImages(p).length} photos` : ""}</small></div>
             <select class="manage-category-select" data-id="${p.id}">
               ${CATEGORIES.map((cc) => `<option value="${escapeHtml(cc.slug)}" ${cc.slug === p.category ? "selected" : ""}>${escapeHtml(cc.name)}</option>`).join("")}
             </select>
@@ -1073,6 +1248,7 @@ function renderManageList() {
 }
 $("#manageDialogClose").addEventListener("click", () => $("#manageDialog").close());
 $("#manageCatalogueBtn").addEventListener("click", () => { renderManageList(); $("#manageDialog").showModal(); });
+$("#mergeCatalogueBtn").addEventListener("click", () => { renderManageList(); $("#manageDialog").showModal(); setTimeout(() => $("#manageMergeSelectedBtn").scrollIntoView({ behavior: "smooth", block: "center" }), 50); });
 $("#manageAddCategoryBtn").addEventListener("click", () => { $("#manageDialog").close(); openCategoryDialog(); });
 $("#manageAddProductBtn").addEventListener("click", () => { $("#manageDialog").close(); openProductDialog(); });
 $("#manageList").addEventListener("click", (e) => {
