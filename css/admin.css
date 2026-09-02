@@ -7,6 +7,7 @@
 .admin-dialog { border: 0; border-radius: 20px; padding: 0; width: min(440px, 92vw); box-shadow: 0 24px 80px rgba(0,0,0,.28); background: var(--white); color: var(--ink); }
 .admin-dialog::backdrop { background: rgba(17,17,17,.6); backdrop-filter: blur(3px); }
 .admin-dialog-lg { width: min(640px, 94vw); }
+.admin-dialog-xl { width: min(720px, 94vw); }
 .admin-form { position: relative; padding: 34px; display: grid; gap: 16px; }
 .admin-form h2 { margin-bottom: -6px; font-family: var(--font-head); color: var(--ink); }
 .admin-help { color: var(--muted); font-size: .86rem; }
@@ -103,6 +104,17 @@
 .photo-thumb-add { display: flex; align-items: center; justify-content: center; color: var(--primary-dark); font-size: 1.6rem; font-weight: 700; background: var(--cream); border: 1.5px dashed var(--primary-light); cursor: pointer; }
 .photo-thumb-add:hover { background: var(--primary-light); }
 .photo-gallery-hint { font-size: .76rem; color: var(--muted); }
+
+/* Merge dialog: photos shown LARGE (with the product each came from) so they are easy to identify */
+.photo-gallery-lg { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; max-height: 52vh; overflow-y: auto; padding: 2px; }
+.photo-card-lg { margin: 0; cursor: pointer; }
+.photo-card-lg .photo-thumb { width: 100%; height: auto; aspect-ratio: 1 / 1; border-radius: 14px; }
+.photo-card-lg.is-cover .photo-thumb { border: 2px solid var(--primary); }
+.photo-card-lg .photo-thumb img { transition: transform .2s ease; }
+.photo-card-lg:hover .photo-thumb img { transform: scale(1.05); }
+.photo-card-lg .photo-thumb-cover-tag { font-size: .64rem; padding: 4px 0; }
+.photo-card-lg .photo-thumb-remove { top: 6px; right: 6px; width: 26px; height: 26px; font-size: .95rem; }
+.photo-card-lg-name { margin-top: 6px; font-size: .78rem; font-weight: 600; color: var(--ink); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ---------- Admin toolbar (sits inside the live Products section) ----------
    Hidden by DEFAULT so visitors never see it. It is only shown when BOTH are
